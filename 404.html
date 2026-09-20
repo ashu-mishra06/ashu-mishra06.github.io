@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>404 | Ashutosh Mishra</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body { background: #0e1621; color: #d3dce6; font: 15px/1.6 "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; display: grid; place-items: center; padding: 1rem; }
+    main { max-width: 60ch; }
+    .u { color: #f0b35a; font-weight: 700; } .p { color: #6cc4ea; } .e { color: #f2837f; } .d { color: #7d8fa4; }
+    a { color: #6cc4ea; text-underline-offset: 3px; }
+    a:focus-visible { outline: 2px solid #6cc4ea; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <p><span class="u">guest@ashutosh</span><span class="d">:</span><span class="p">~</span>$ cd <span id="path">this-page</span></p>
+    <p class="e">zsh: no such file or directory (404)</p>
+    <p class="d">That page doesn't exist on this server. Nothing is broken; the address is just wrong.</p>
+    <p><a href="/">cd ~ (back to the portfolio)</a></p>
+  </main>
+  <script>
+    try { document.getElementById("path").textContent = location.pathname.replace(/^\//, "") || "/"; } catch (e) {}
+  </script>
+</body>
+</html>
