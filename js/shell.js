@@ -9,7 +9,8 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  var THEMES = ["midnight", "paper", "phosphor", "amber"];
+  var THEMES = ["graphite", "chalk", "phosphor"];
+  var THEME_ALIAS = { dark: "graphite", light: "chalk", green: "phosphor" };
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -33,6 +34,7 @@
     return '<span class="cmd ' + (cls || "") + '" role="button" tabindex="0" data-cmd="' +
       esc(cmd) + '">' + esc(text) + "</span>";
   }
+  function ind(html) { return '<span class="ind">' + html + "</span>"; }
   function pad(s, n) { s = String(s); while (s.length < n) s += " "; return s; }
   function nbsp(n) { return new Array(n + 1).join("\u00a0"); }
 
@@ -97,6 +99,13 @@
     function dir(children) { return { type: "dir", children: children }; }
     function has(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
 
+    function eduLines() {
+      return (D.education || []).filter(function (e) { return e.degree; }).map(function (e) {
+        return e.degree + (e.institution ? ", " + e.institution : "") + (e.period ? " (" + e.period + ")" : "");
+      });
+    }
+    function skillGroups() { return D.skills || []; }
+
     function buildFS(D) {
       var L = D.links || {};
       var home = {};
@@ -112,15 +121,11 @@
         "Full work and education history: " + L.linkedin
       );
 
-      var edu = (D.education || []).filter(function (e) { return e.degree; });
-      if (edu.length) {
-        home["education.txt"] = file(edu.map(function (e) {
-          return e.degree + (e.institution ? ", " + e.institution : "") + (e.period ? " (" + e.period + ")" : "");
-        }).join("\n"));
-      }
+      var edu = eduLines();
+      if (edu.length) home["education.txt"] = file(edu.join("\n"));
 
       var sk = {};
-      Object.keys(D.skills || {}).forEach(function (k) { sk[k + ".txt"] = file(D.skills[k].join("\n")); });
+      (D.skills || []).forEach(function (g) { sk[g.id + ".txt"] = file(g.items.join("\n")); });
       home["skills"] = dir(sk);
 
       var pr = {};
@@ -132,9 +137,12 @@
         }
         t.push("", "## Stack", p.stack.join(", "));
         if (p.role) t.push("", "## My part", p.role);
-        t.push("", "## Links");
-        if (p.repo) t.push("repo: " + p.repo);
-        if (p.live) t.push("live: " + p.live);
+        if (p.status) t.push("", "## Status", p.status);
+        if (p.live || p.repo) {
+          t.push("", "## Links");
+          if (p.live) t.push("live: " + p.live);
+          if (p.repo) t.push("repo: " + p.repo);
+        }
         pr[p.id + ".md"] = file(t.join("\n"));
       });
       home["projects"] = dir(pr);
@@ -145,11 +153,25 @@
       });
       home["achievements"] = dir(ac);
 
+      var ce = {};
+      (D.certifications || []).forEach(function (x) {
+        var t = ["# " + x.title];
+        if (x.issuer) t.push(x.issuer);
+        if (x.issued) t.push("Issued " + x.issued + (x.expires ? ", expires " + x.expires : ""));
+        ce[x.id + ".md"] = file(t.join("\n"));
+      });
+      home["certifications"] = dir(ce);
+
       var ex = {};
       (D.experience || []).forEach(function (x) {
         var t = ["# " + x.role + ", " + x.org];
-        if (x.period) t.push(x.period);
+        var when = [x.period, x.location].filter(Boolean).join(", ");
+        if (when) t.push(when);
         t.push("", x.summary);
+        if (x.points && x.points.length) {
+          t.push("", "## What I did");
+          x.points.forEach(function (pt) { t.push("- " + pt); });
+        }
         if (x.link) t.push("", x.link);
         ex[x.id + ".md"] = file(t.join("\n"));
       });
@@ -229,7 +251,7 @@
       return text.split("\n").map(function (line) {
         if (md && line.indexOf("# ") === 0) return c("t-h1", line.slice(2));
         if (md && line.indexOf("## ") === 0) return c("t-h2", line.slice(3));
-        if (md && /^- /.test(line)) return c("acc", "•") + " " + linkify(line.slice(2));
+        if (md && /^- /.test(line)) return '<span class="li">' + c("dim", "-") + " " + linkify(line.slice(2)) + "</span>";
         return linkify(line);
       });
     }
@@ -243,18 +265,13 @@
     /* ================= commands ================= */
 
     def("help", { group: "system", usage: "help", desc: "show this list" }, function (args, res) {
-      var groups = [
-        ["portfolio", "start here"],
-        ["explore", "look around like it's a real Linux box"],
-        ["links", "leave the terminal"],
-        ["system", "the rest"]
-      ];
-      res.html.push(c("dim", "Tab completes, ↑ ↓ recall history, click any underlined text. Type 'man <command>' for details."), "");
+      var groups = [["portfolio"], ["explore"], ["links"], ["system"]];
+      res.html.push(c("dim", "Tab completes, arrow keys recall history, underlined text is clickable. man <command> explains one."), "");
       groups.forEach(function (g) {
-        res.html.push(c("acc", g[0]) + c("dim", "  " + g[1]));
+        res.html.push(c("hd", g[0]));
         visibleCommands().filter(function (k) { return COMMANDS[k].group === g[0]; }).forEach(function (k) {
           var m = COMMANDS[k];
-          res.html.push("  " + cmdLink(m.example || k, pad(m.usage, 22), "") + c("dim", m.desc));
+          res.html.push("  " + cmdLink(m.example || k, m.usage) + pad("", Math.max(2, 24 - m.usage.length)) + c("dim", m.desc));
         });
         res.html.push("");
       });
@@ -275,51 +292,61 @@
 
     def("projects", { group: "portfolio", usage: "projects", desc: "things I've built" }, function (args, res) {
       res.html.push(c("dim", (D.projects || []).length + " projects in ~/projects"), "");
-      (D.projects || []).forEach(function (p) {
-        res.html.push(cmdLink("cat ~/projects/" + p.id + ".md", p.name, "acc2 b"));
-        res.html.push("  " + esc(p.summary));
-        res.html.push("  " + c("dim", "stack: " + p.stack.join(", ")));
-        res.html.push("  " + cmdLink("cat ~/projects/" + p.id + ".md", "read more") + c("dim", "   ") +
-          cmdLink("open " + p.id, "open on GitHub"));
-        res.html.push("");
+      (D.projects || []).forEach(function (p, i) {
+        if (i) res.html.push("");
+        res.html.push(cmdLink("cat ~/projects/" + p.id + ".md", p.name, "pname"));
+        res.html.push(ind(esc(p.summary)));
+        if (p.status) res.html.push(ind(c("st", p.status)));
+        res.html.push(ind(c("dim", "stack: " + p.stack.join(", "))));
+        var acts = [cmdLink("cat ~/projects/" + p.id + ".md", "read more")];
+        if (p.live) acts.push(cmdLink("open " + p.id, "live site"));
+        if (p.repo) acts.push(cmdLink("open " + p.id + " repo", "source"));
+        res.html.push(ind(acts.join(c("dim", "   "))));
       });
     });
 
     def("skills", { group: "portfolio", usage: "skills", desc: "languages, frameworks, tools" }, function (args, res) {
-      var s = D.skills || {};
-      var w = Math.max.apply(null, Object.keys(s).map(function (k) { return k.length; })) + 2;
-      Object.keys(s).forEach(function (k) {
-        res.html.push(c("acc", pad(k, w)) + s[k].map(esc).join(c("dim", " · ")));
+      var g = skillGroups();
+      var w = Math.max.apply(null, g.map(function (x) { return x.id.length; })) + 2;
+      g.forEach(function (x) {
+        res.html.push(c("k", pad(x.id, w)) + x.items.map(esc).join(", "));
       });
     });
 
     def("achievements", { group: "portfolio", usage: "achievements", desc: "hackathons and badges" }, function (args, res) {
-      (D.achievements || []).forEach(function (x) {
-        res.html.push(c("acc", "★ ") + cmdLink("cat ~/achievements/" + x.id + ".md", x.title, "b"));
-        res.html.push("  " + c("dim", x.detail));
+      (D.achievements || []).forEach(function (x, i) {
+        if (i) res.html.push("");
+        res.html.push(cmdLink("cat ~/achievements/" + x.id + ".md", x.title, "pname"));
+        res.html.push(ind(c("dim", x.detail)));
       });
     });
 
     def("experience", { group: "portfolio", usage: "experience", desc: "internships and work" }, function (args, res) {
       (D.experience || []).forEach(function (x) {
-        res.html.push(cmdLink("cat ~/experience/" + x.id + ".md", x.role + ", " + x.org, "b") + (x.period ? c("dim", "  " + x.period) : ""));
-        res.html.push("  " + esc(x.summary));
+        res.html.push(cmdLink("cat ~/experience/" + x.id + ".md", x.role + ", " + x.org, "b"));
+        var when = [x.period, x.location].filter(Boolean).join(", ");
+        if (when) res.html.push(ind(c("dim", when)));
+        res.html.push(ind(esc(x.summary)));
       });
-      var edu = (D.education || []).filter(function (e) { return e.degree; });
-      if (edu.length) {
-        res.html.push("");
-        edu.forEach(function (e) {
-          res.html.push(c("acc", "education  ") + esc(e.degree + (e.institution ? ", " + e.institution : "") + (e.period ? " (" + e.period + ")" : "")));
-        });
-      }
+    });
+
+    def(["certifications", "certs"], { group: "portfolio", usage: "certifications", desc: "courses and certificates" }, function (args, res) {
+      (D.certifications || []).forEach(function (x) {
+        var meta = [x.issuer, x.issued ? "issued " + x.issued : ""].filter(Boolean).join(", ");
+        res.html.push(cmdLink("cat ~/certifications/" + x.id + ".md", x.title, "pname") + (meta ? c("dim", "  " + meta) : ""));
+      });
+    });
+
+    def("education", { group: "system", usage: "education", desc: "degree", hidden: true }, function (args, res) {
+      eduLines().forEach(function (l) { res.html.push(esc(l)); });
     });
 
     def("contact", { group: "portfolio", usage: "contact", desc: "email, GitHub, LinkedIn" }, function (args, res) {
       var L = D.links;
-      res.html.push(c("acc", "email     ") + a("mailto:" + L.email, L.email));
-      res.html.push(c("acc", "github    ") + a(L.github));
-      res.html.push(c("acc", "linkedin  ") + a(L.linkedin));
-      if (L.resume) res.html.push(c("acc", "resume    ") + a(L.resume));
+      res.html.push(c("k", "email     ") + a("mailto:" + L.email, L.email));
+      res.html.push(c("k", "github    ") + a(L.github));
+      res.html.push(c("k", "linkedin  ") + a(L.linkedin));
+      if (L.resume) res.html.push(c("k", "resume    ") + a(L.resume));
     });
 
     def("resume", { group: "portfolio", usage: "resume", desc: "résumé / full history" }, function (args, res) {
@@ -403,14 +430,14 @@
       var segs = absSegs(p), n = nodeAt(segs);
       if (!n) { res.html.push(err("tree: " + p + ": No such file or directory")); return; }
       var counts = { d: 0, f: 0 };
-      res.html.push(c("acc2 b", p === "." ? "." : p));
+      res.html.push(c("pname", p === "." ? "." : p));
       (function walk(node, prefix, s) {
         if (node.type !== "dir") return;
         var names = listNames(node, showHidden);
         names.forEach(function (name, i) {
           var last = i === names.length - 1, child = node.children[name], cs = s.concat(name);
-          res.html.push(c("dim", prefix + (last ? "└── " : "├── ")) + entryHTML(name, child, cs));
-          if (child.type === "dir") { counts.d++; walk(child, prefix + (last ? "    " : "│   "), cs); }
+          res.html.push(c("dim", prefix + (last ? "`-- " : "|-- ")) + entryHTML(name, child, cs));
+          if (child.type === "dir") { counts.d++; walk(child, prefix + (last ? "    " : "|   "), cs); }
           else counts.f++;
         });
       })(n, "", segs);
@@ -438,7 +465,7 @@
               idx = lower.indexOf(needle, last);
             }
             html += esc(line.slice(last));
-            res.html.push(cmdLink("cat " + tilde(s), tilde(s), "acc2") + c("dim", ":") + html);
+            res.html.push(cmdLink("cat " + tilde(s), tilde(s), "k") + c("dim", ":") + html);
             hits++;
           });
         } else {
@@ -465,7 +492,12 @@
       else if (t === "resume" && L.resume) url = L.resume;
       else {
         var p = (D.projects || []).filter(function (x) { return x.id === t || x.name.toLowerCase() === t; })[0];
-        if (p) { url = p.live || p.repo; label = p.name; }
+        if (p) {
+          var wantRepo = /^(repo|source|code|github)$/i.test(args[1] || "");
+          url = wantRepo ? (p.repo || p.live) : (p.live || p.repo);
+          label = p.name;
+          if (!url) { res.html.push(c("dim", p.name + " has no public link yet. ") + cmdLink("cat ~/projects/" + p.id + ".md", "read about it here")); return; }
+        }
       }
       if (!url) { res.html.push(err("open: unknown target '" + args[0] + "'. Try: " + (D.projects || []).map(function (p) { return p.id; }).join(", ") + ", github, linkedin, email")); return; }
       res.html.push(c("dim", "opening " + label + " → ") + a(url));
@@ -473,46 +505,42 @@
     });
 
     /* --- system --- */
-    def("neofetch", { group: "system", usage: "neofetch", desc: "system summary (a.k.a. the front page)" }, function (args, res, ctx) {
-      var ART = [
-        "      .--.      ",
-        "     |o_o |     ",
-        "     |:_/ |     ",
-        "    //   \\ \\    ",
-        "   (|     | )   ",
-        "  /'\\_   _/`\\   ",
-        "  \\___)=(___/   "
-      ];
+    def("neofetch", { group: "system", usage: "neofetch", desc: "system facts" }, function (args, res, ctx) {
       var L = D.links;
-      var info = [
-        c("p-user", USER + "@" + HOST),
-        c("dim", "─────────────────────"),
-        c("acc", "OS         ") + "Ashu Linux x86_64",
-        c("acc", "Host       ") + "GitHub Pages",
-        c("acc", "Shell      ") + "zsh (simulated)",
-        c("acc", "Uptime     ") + esc(uptimeStr()),
-        c("acc", "Role       ") + esc(D.role),
-        c("acc", "Focus      ") + esc((D.focus || []).join(", ")),
-        c("acc", "Languages  ") + esc((D.skills.languages || []).join(", ")),
-        c("acc", "Projects   ") + esc(String((D.projects || []).length)) + " in ~/projects",
-        c("acc", "Loop       ") + esc(D.loop),
-        c("acc", "Contact    ") + esc(L.email),
-        c("acc", "Theme      ") + esc((ctx && ctx.theme) || "midnight"),
-        "",
-        c("pal-1", "███") + c("pal-2", "███") + c("pal-3", "███") + c("pal-4", "███") + c("pal-5", "███")
-      ];
-      var cols = (ctx && ctx.cols) || 80;
-      var plainLen = function (h) { return h.replace(/<[^>]+>/g, "").replace(/&(amp|lt|gt|quot);/g, "x").length; };
-      var widest = Math.max.apply(null, info.map(plainLen));
-      if (cols >= ART[0].length + widest + 2) {
-        for (var i = 0; i < info.length; i++) {
-          res.html.push((i < ART.length ? c("art", ART[i]) : nbsp(ART[0].length)) + info[i]);
-        }
-      } else {
-        ART.forEach(function (l) { res.html.push(c("art", l)); });
-        res.html.push("");
-        info.forEach(function (l) { res.html.push(l); });
-      }
+      var rows = [
+        ["os", "Ashu Linux x86_64"],
+        ["host", "GitHub Pages"],
+        ["shell", "zsh (simulated)"],
+        ["uptime", uptimeStr()],
+        ["role", D.role],
+        D.now ? ["now", D.now] : null,
+        D.award ? ["award", D.award] : null,
+        ["focus", (D.focus || []).join(", ")],
+        ["languages", (skillGroups()[0] ? skillGroups()[0].items : []).join(", ")],
+        ["projects", (D.projects || []).length + " in ~/projects"],
+        ["contact", L.email],
+        ["theme", (ctx && ctx.theme) || "graphite"]
+      ].filter(Boolean);
+      res.html.push(c("b", USER + "@" + HOST), c("dim", "-------------"));
+      rows.forEach(function (r) { res.html.push(c("k", pad(r[0], 11)) + esc(r[1])); });
+    });
+
+    def("home", { group: "portfolio", usage: "home", desc: "the front page" }, function (args, res) {
+      var L = D.links;
+      res.html.push("");
+      res.html.push('<span class="hero-name">' + esc(D.name) + "</span>");
+      res.html.push('<span class="hero-role">' + esc(D.role) + "</span>");
+      res.html.push("");
+      if (D.tagline) res.html.push(esc(D.tagline), "");
+      if (D.now) res.html.push(c("k", pad("now", 8)) + esc(D.now));
+      if (D.award) res.html.push(c("k", pad("award", 8)) + esc(D.award));
+      res.html.push(c("k", pad("email", 8)) + a("mailto:" + L.email, L.email));
+      res.html.push("");
+      var links = ["about", "projects", "skills", "achievements", "contact"];
+      if (L.resume) links.push("resume");
+      res.html.push(links.map(function (n) { return cmdLink(n, n); }).join("   "));
+      res.html.push("");
+      res.html.push(c("dim", "Type ") + cmdLink("help", "help") + c("dim", " for every command, or ") + cmdLink("plain", "plain") + c("dim", " for a regular page."));
     });
 
     def("whoami", { group: "system", usage: "whoami", desc: "who are you? who am I?" }, function (args, res) {
@@ -540,16 +568,18 @@
       var map = { USER: USER, HOME: "/" + HOME.join("/"), SHELL: "/bin/zsh", PWD: "/" + cwd.join("/"), HOSTNAME: HOST };
       res.html.push(esc(args.join(" ").replace(/\$(\w+)/g, function (m, k) { return has(map, k) ? map[k] : ""; })));
     });
-    def("theme", { group: "system", usage: "theme [name]", desc: "midnight, paper, phosphor, amber", example: "theme" }, function (args, res, ctx) {
+    def("theme", { group: "system", usage: "theme [name]", desc: "graphite (dark), chalk (light), phosphor", example: "theme" }, function (args, res, ctx) {
       if (!args[0]) {
         THEMES.forEach(function (t) {
-          res.html.push((ctx && ctx.theme === t ? c("acc", "* ") : "  ") + cmdLink("theme " + t, t));
+          res.html.push((ctx && ctx.theme === t ? c("st", "> ") : "  ") + cmdLink("theme " + t, t));
         });
+        res.html.push("", c("dim", "'dark', 'light' and 'green' work too"));
         return;
       }
-      if (THEMES.indexOf(args[0]) < 0) { res.html.push(err("theme: unknown theme '" + args[0] + "'. Choose: " + THEMES.join(", "))); return; }
-      res.actions.push({ type: "theme", name: args[0] });
-      res.html.push(c("dim", "theme → " + args[0]));
+      var name = THEME_ALIAS[args[0]] || args[0];
+      if (THEMES.indexOf(name) < 0) { res.html.push(err("theme: unknown theme '" + args[0] + "'. Choose: " + THEMES.join(", "))); return; }
+      res.actions.push({ type: "theme", name: name });
+      res.html.push(c("dim", "theme: " + name));
     });
     def(["plain", "gui"], { group: "system", usage: "plain", desc: "switch to a normal, non-terminal page" }, function (args, res) {
       res.html.push(c("dim", "opening plain view (Esc returns to the terminal)"));
@@ -561,17 +591,17 @@
       res.actions.push({ type: "reboot" });
     });
     def("./stats.sh", { group: "system", usage: "./stats.sh", desc: "quick numbers", hidden: true }, function (args, res) {
-      var s = D.skills || {}, total = Object.keys(s).reduce(function (n, k) { return n + s[k].length; }, 0);
-      res.html.push(c("acc", "projects      ") + (D.projects || []).length);
-      res.html.push(c("acc", "skills        ") + total);
-      res.html.push(c("acc", "achievements  ") + (D.achievements || []).length);
-      res.html.push(c("acc", "loop          ") + esc(D.loop));
+      var total = skillGroups().reduce(function (n, g) { return n + g.items.length; }, 0);
+      res.html.push(c("k", "projects      ") + (D.projects || []).length);
+      res.html.push(c("k", "skills        ") + total);
+      res.html.push(c("k", "achievements  ") + (D.achievements || []).length);
+      res.html.push(c("k", "loop          ") + esc(D.loop));
     });
 
     /* --- jokes that double as extra contact routes --- */
     def("sudo", { group: "system", usage: "sudo <command>", desc: "try it", hidden: true }, function (args, res) {
       if (!args.length) { res.html.push("usage: sudo <command>"); return; }
-      res.html.push("[sudo] password for " + USER + ": " + c("dim", "••••••••"));
+      res.html.push("[sudo] password for " + USER + ": " + c("dim", "********"));
       if (/hire|job|intern/i.test(args.join(" "))) {
         res.html.push(c("ok", "Password accepted. Good call."));
         run("contact", res, {});
@@ -650,7 +680,7 @@
       if (!parts.length) cands = visibleCommands().concat(["./stats.sh"]);
       else {
         var cmd = parts[0];
-        if (cmd === "theme") cands = THEMES;
+        if (cmd === "theme") cands = THEMES.concat(Object.keys(THEME_ALIAS));
         else if (cmd === "man" || cmd === "help") cands = visibleCommands();
         else if (cmd === "open") {
           cands = (D.projects || []).map(function (p) { return p.id; }).concat(["github", "linkedin", "email"]);

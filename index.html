@@ -1,37 +1,53 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="midnight">
+<html lang="en" data-theme="graphite">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>Ashutosh Mishra | Full Stack, AI and Android developer</title>
-  <meta name="description" content="Portfolio of Ashutosh Mishra, a B.Tech CSE student building full-stack web apps, Android apps and AI/ML tools. Explore it like a Linux terminal.">
-  <meta name="theme-color" content="#0e1621">
+  <title>Ashutosh Mishra | Full-stack and Android developer</title>
+  <meta name="description" content="Portfolio of Ashutosh Mishra, a full-stack and application developer building web apps, Android apps and AI/ML tools. Explore it like a Linux terminal.">
+  <meta name="theme-color" content="#1e2227">
+  <meta name="color-scheme" content="dark light">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Ashutosh Mishra | Full Stack, AI and Android developer">
+  <meta property="og:title" content="Ashutosh Mishra | Full-stack and Android developer">
   <meta property="og:description" content="A portfolio you explore from a Linux terminal: ls, cd, cat, grep and more.">
   <meta name="twitter:card" content="summary">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* Set the theme before first paint so there is no flash: saved choice, else the visitor's system setting. */
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (!t) t = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "chalk" : "graphite";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
-  <header class="titlebar">
-    <span class="title" id="title">guest@ashutosh: <span id="title-path">~</span></span>
-    <span class="tools">
-      <button type="button" id="btn-plain" title="Show a normal page instead of the terminal">plain view</button>
-      <button type="button" id="btn-theme" title="Change colour theme">theme<span class="tn">: <span id="theme-name">midnight</span></span></button>
-    </span>
+  <header class="bar top">
+    <div class="wrap bar-in">
+      <span class="title" id="title"><span class="dim">guest@ashutosh:</span> <span id="title-path">~</span></span>
+      <span class="tools">
+        <button type="button" id="btn-plain" title="Show a regular page instead of the terminal">plain</button>
+        <span class="themes" role="group" aria-label="Colour theme">
+          <button type="button" class="th" data-theme-pick="graphite" aria-pressed="true" title="Dark theme">dark</button>
+          <button type="button" class="th" data-theme-pick="chalk" aria-pressed="false" title="Light theme">light</button>
+        </span>
+      </span>
+    </div>
   </header>
 
   <main id="screen" class="screen" aria-label="Terminal">
-    <div class="screen-inner">
+    <div class="wrap">
       <div id="out" role="log" aria-live="off">
         <noscript>
-          <div class="ln"><strong>Ashutosh Mishra</strong>: B.Tech CSE student. Full Stack, AI, Android.</div>
+          <div class="ln"><strong>Ashutosh Mishra</strong>: Full-stack and application developer. Application Developer Intern at Atavishaala.</div>
           <div class="ln">This portfolio is an interactive terminal and needs JavaScript. Links:</div>
-          <div class="ln"><a href="https://github.com/ashu-mishra06">GitHub</a> | <a href="https://www.linkedin.com/in/ashutosh-mishra-7394ab32a">LinkedIn</a> | <a href="mailto:mishrashu777@gmail.com">Email</a></div>
+          <div class="ln"><a href="https://github.com/ashu-mishra06">GitHub</a> | <a href="https://www.linkedin.com/in/ashutosh-mishra-7394ab32a">LinkedIn</a> | <a href="mailto:mishrashu777@gmail.com">Email</a> | <a href="Ashutosh_Mishra_Resume.pdf">Resume (PDF)</a></div>
         </noscript>
       </div>
       <div id="row" class="row" hidden>
@@ -41,21 +57,21 @@
     </div>
   </main>
 
-  <nav class="tmux" aria-label="Quick commands">
-    <span class="session">[ashu]</span>
-    <span class="wins" id="wins">
-      <button type="button" class="win active" data-cmd="neofetch" data-win="0">0:home</button>
-      <button type="button" class="win" data-cmd="cat ~/about.md" data-win="1">1:about</button>
-      <button type="button" class="win" data-cmd="projects" data-win="2">2:projects</button>
-      <button type="button" class="win" data-cmd="skills" data-win="3">3:skills</button>
-      <button type="button" class="win" data-cmd="achievements" data-win="4">4:achievements</button>
-      <button type="button" class="win" data-cmd="contact" data-win="5">5:contact</button>
-      <button type="button" class="win" data-cmd="help" data-win="6">6:help</button>
-    </span>
-    <span class="clock" id="clock" aria-hidden="true"></span>
+  <nav class="bar bottom" aria-label="Quick commands">
+    <div class="wrap bar-in">
+      <span class="wins" id="wins">
+        <button type="button" class="win active" data-cmd="home" data-win="0">home</button>
+        <button type="button" class="win" data-cmd="cat ~/about.md" data-win="1">about</button>
+        <button type="button" class="win" data-cmd="projects" data-win="2">projects</button>
+        <button type="button" class="win" data-cmd="skills" data-win="3">skills</button>
+        <button type="button" class="win" data-cmd="achievements" data-win="4">achievements</button>
+        <button type="button" class="win" data-cmd="contact" data-win="5">contact</button>
+        <button type="button" class="win" data-cmd="help" data-win="6">help</button>
+      </span>
+    </div>
   </nav>
 
-  <div id="plain" class="plain" hidden role="dialog" aria-modal="true" aria-label="Plain view of the portfolio"></div>
+  <div id="plain" class="plain" hidden role="dialog" aria-modal="true" aria-label="Regular page view of the portfolio"></div>
 
   <script src="js/data.js"></script>
   <script src="js/shell.js"></script>

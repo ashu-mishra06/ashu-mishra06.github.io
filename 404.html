@@ -3,23 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
   <title>404 | Ashutosh Mishra</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
   <style>
+    :root { --bg: #1e2227; --fg: #d8dce1; --strong: #f1f3f5; --dim: #8b939c; --acc: #86c5b1; --err: #e08a83; --rule: rgba(216, 220, 225, .3); }
+    @media (prefers-color-scheme: light) { :root { --bg: #f6f7f8; --fg: #22262b; --strong: #0f1215; --dim: #666e77; --acc: #1f6f5c; --err: #b0413a; --rule: rgba(34, 38, 43, .3); } }
     html, body { height: 100%; margin: 0; }
-    body { background: #0e1621; color: #d3dce6; font: 15px/1.6 "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; display: grid; place-items: center; padding: 1rem; }
-    main { max-width: 60ch; }
-    .u { color: #f0b35a; font-weight: 700; } .p { color: #6cc4ea; } .e { color: #f2837f; } .d { color: #7d8fa4; }
-    a { color: #6cc4ea; text-underline-offset: 3px; }
-    a:focus-visible { outline: 2px solid #6cc4ea; outline-offset: 3px; }
+    body { background: var(--bg); color: var(--fg); font: 400 15px/1.7 "IBM Plex Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace; display: grid; place-items: center; padding: 1.5rem; }
+    main { width: 100%; max-width: 62ch; }
+    p { margin: 0 0 1.2em; overflow-wrap: anywhere; }
+    .dim { color: var(--dim); } .err { color: var(--err); } .cmd { color: var(--strong); } .d { color: var(--acc); }
+    a { color: inherit; text-underline-offset: .28em; text-decoration-color: var(--rule); }
+    a:hover { color: var(--strong); text-decoration-color: var(--acc); }
+    a:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; border-radius: 2px; }
   </style>
 </head>
 <body>
   <main>
-    <p><span class="u">guest@ashutosh</span><span class="d">:</span><span class="p">~</span>$ cd <span id="path">this-page</span></p>
-    <p class="e">zsh: no such file or directory (404)</p>
-    <p class="d">That page doesn't exist on this server. Nothing is broken; the address is just wrong.</p>
-    <p><a href="/">cd ~ (back to the portfolio)</a></p>
+    <p><span class="dim">guest@ashutosh:~</span> <span class="d">$</span> <span class="cmd">cd <span id="path">this-page</span></span></p>
+    <p class="err">zsh: no such file or directory (404)</p>
+    <p class="dim">That address doesn't exist on this site. Nothing is broken; the link is just wrong.</p>
+    <p><a href="/">Back to the portfolio</a></p>
   </main>
   <script>
     try { document.getElementById("path").textContent = location.pathname.replace(/^\//, "") || "/"; } catch (e) {}

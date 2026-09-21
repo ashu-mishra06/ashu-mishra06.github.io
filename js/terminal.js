@@ -14,10 +14,10 @@
 
   function $(id) { return document.getElementById(id); }
   var out = $("out"), row = $("row"), input = $("cmd"), promptEl = $("prompt"), screen = $("screen");
-  var titlePath = $("title-path"), themeBtn = $("btn-theme"), themeName = $("theme-name");
-  var plainBtn = $("btn-plain"), plain = $("plain"), clock = $("clock");
+  var titlePath = $("title-path");
+  var plainBtn = $("btn-plain"), plain = $("plain");
 
-  var state = { theme: "midnight", busy: true, histIdx: -1, draft: "", plainOpen: false, bootId: 0 };
+  var state = { theme: "graphite", busy: true, histIdx: -1, draft: "", plainOpen: false, bootId: 0 };
   var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- safe storage (private mode / blocked storage must not break the site) ---------- */
@@ -40,23 +40,16 @@
     promptEl.innerHTML = shell.promptHTML();
     titlePath.textContent = shell.cwdLabel();
   }
-  function measureCols() {
-    var probe = document.createElement("span");
-    probe.className = "probe";
-    probe.textContent = new Array(41).join("0");
-    out.appendChild(probe);
-    var w = probe.getBoundingClientRect().width / 40;
-    out.removeChild(probe);
-    return Math.max(20, Math.floor(out.clientWidth / (w || 8)));
-  }
-  function ctx() { return { cols: measureCols(), theme: state.theme }; }
+  function ctx() { return { theme: state.theme }; }
 
   /* ---------- themes ---------- */
   function applyTheme(name, persist) {
-    if (S.THEMES.indexOf(name) < 0) name = "midnight";
+    if (S.THEMES.indexOf(name) < 0) name = "graphite";
     state.theme = name;
     document.documentElement.setAttribute("data-theme", name);
-    themeName.textContent = name;
+    Array.prototype.forEach.call(document.querySelectorAll(".th"), function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-theme-pick") === name ? "true" : "false");
+    });
     var bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta && bg) meta.setAttribute("content", bg);
@@ -66,7 +59,7 @@
   /* ---------- tmux window highlight ---------- */
   function markWindow(line) {
     var l = line.trim(), idx = -1;
-    if (/^neofetch\b/.test(l)) idx = 0;
+    if (/^home\b/.test(l)) idx = 0;
     else if (/^about\b|about\.md/.test(l)) idx = 1;
     else if (/^projects\b|\/projects\//.test(l)) idx = 2;
     else if (/^skills\b/.test(l)) idx = 3;
@@ -78,12 +71,6 @@
       w.classList.toggle("active", Number(w.getAttribute("data-win")) === idx);
     });
   }
-  function tickClock() {
-    var d = new Date();
-    function z(n) { return n < 10 ? "0" + n : "" + n; }
-    clock.textContent = "guest@" + D.handle + "  " + z(d.getHours()) + ":" + z(d.getMinutes());
-  }
-
   /* ---------- running commands ---------- */
   function openUrl(url) {
     if (/^mailto:/i.test(url)) window.location.href = url;
@@ -99,7 +86,7 @@
   function runLine(line) {
     if (state.busy) return;
     line = String(line);
-    print(shell.promptHTML() + " " + esc(line), "echo");
+    print(shell.promptHTML() + " " + '<span class="typed">' + esc(line) + "</span>", "echo");
     var res = shell.exec(line, ctx());
     res.html.forEach(function (h) { print(h); });
     res.actions.forEach(handleAction);
@@ -146,7 +133,7 @@
       var changed = r.line !== input.value;
       if (changed) setInput(r.line);
       if (!changed && r.options.length > 1) {
-        print(shell.promptHTML() + " " + esc(input.value), "echo");
+        print(shell.promptHTML() + " " + '<span class="typed">' + esc(input.value) + "</span>", "echo");
         print(c("dim", r.options.join("  ")));
         scrollDown();
       }
@@ -155,7 +142,7 @@
       out.textContent = "";
     } else if (e.ctrlKey && (e.key === "c" || e.key === "C") && !window.getSelection().toString()) {
       e.preventDefault();
-      print(shell.promptHTML() + " " + esc(input.value) + "^C", "echo");
+      print(shell.promptHTML() + " " + '<span class="typed">' + esc(input.value) + "^C</span>", "echo");
       input.value = "";
       state.histIdx = -1;
       scrollDown();
@@ -193,17 +180,11 @@
 
   /* ---------- boot sequence ---------- */
   function bootLines() {
-    var ok = c("ok", "[  OK  ]") + " ";
     return [
-      [c("dim", "ashu-bios 1.0: memory check ... 640K ought to be enough"), 140],
-      [c("dim", "Booting Linux 6.9.0-curious (x86_64)"), 160],
-      [ok + "Mounted /home/guest (read-only)", 90],
-      [ok + "Started curiosity.service", 90],
-      [ok + "Loaded " + (D.projects || []).length + " projects from ~/projects", 110],
-      [ok + "Started hackathon-mode.target", 90],
-      [ok + "Reached target Portfolio", 200],
-      ["", 60],
-      [esc(D.handle) + " login: " + c("acc", "guest") + c("dim", " (automatic login)"), 260]
+      [c("dim", "ashutosh-os 6.9 x86_64"), 150],
+      [c("dim", "mounting /home/guest (read-only)"), 130],
+      [c("dim", "loading " + (D.projects || []).length + " projects"), 130],
+      [c("dim", "ready"), 260]
     ];
   }
   function boot(opts) {
@@ -221,37 +202,29 @@
     window.addEventListener("pointerdown", onSkip);
     function wait(ms) { return skip ? Promise.resolve() : new Promise(function (r) { setTimeout(r, ms); }); }
 
-    if (!skip) print(c("dim", "press any key to skip"));
-    var lines = bootLines();
     var chain = Promise.resolve();
-    lines.forEach(function (l) {
-      chain = chain.then(function () {
-        if (myBoot !== state.bootId) return;
-        print(l[0]);
-        scrollDown();
-        return wait(l[1]);
+    if (!skip) {
+      bootLines().forEach(function (l) {
+        chain = chain.then(function () {
+          if (myBoot !== state.bootId || skip) return;
+          print(l[0]);
+          return wait(l[1]);
+        });
       });
-    });
+    }
     return chain.then(function () {
       window.removeEventListener("keydown", onSkip);
       window.removeEventListener("pointerdown", onSkip);
       if (myBoot !== state.bootId) return;
-      print("");
-      shell.exec("neofetch", ctx(), { record: false }).html.forEach(function (h) { print(h); });
-      print("");
-      print("Welcome. This is a working shell, so poke around. Try " +
-        cmdLink("about", "about") + ", " + cmdLink("projects", "projects") + ", " +
-        cmdLink("skills", "skills") + ", " + cmdLink("grep kotlin", "grep kotlin") + " or " +
-        cmdLink("help", "help") + ".");
-      print(c("dim", "Prefer a normal page? Type ") + cmdLink("plain", "plain") + c("dim", " or use the button at the top."));
-      print("");
+      out.textContent = "";
+      shell.exec("home", ctx(), { record: false }).html.forEach(function (h) { print(h); });
       sset("booted", "1");
       state.busy = false;
       out.setAttribute("aria-live", "polite");
       row.hidden = false;
       refreshPrompt();
       if (!isTouch()) input.focus({ preventScroll: true });
-      scrollDown();
+      screen.scrollTop = 0;
     });
   }
 
@@ -259,12 +232,13 @@
   function buildPlain() {
     var L = D.links, h = [];
     function link(url, text) { return '<a href="' + esc(S.safeUrl(url)) + '" target="_blank" rel="noopener noreferrer">' + esc(text) + "</a>"; }
+    function skillLabel(g) { return g.label || (D.skillLabels && D.skillLabels[g.id]) || g.id; }
     h.push('<div class="plain-inner">');
-    h.push('<button type="button" class="plain-close" id="plain-close">&larr; Back to terminal (Esc)</button>');
+    h.push('<button type="button" class="plain-close" id="plain-close">Back to terminal (Esc)</button>');
     h.push("<h1>" + esc(D.name) + "</h1>");
-    h.push('<p class="lede">' + esc(D.role) + ". " + esc((D.focus || []).join(", ")) + ".</p>");
+    h.push('<p class="lede">' + esc(D.role) + (D.now ? ". Now: " + esc(D.now) : "") + ".</p>");
     h.push('<p class="linkrow">' + link(L.github, "GitHub") + link(L.linkedin, "LinkedIn") + link("mailto:" + L.email, L.email) +
-      (L.resume ? link(L.resume, "Résumé") : "") + "</p>");
+      (L.resume ? link(L.resume, "Résumé (PDF)") : "") + "</p>");
 
     h.push("<h2>About</h2>");
     var list = false;
@@ -278,18 +252,21 @@
 
     h.push("<h2>Projects</h2>");
     (D.projects || []).forEach(function (p) {
-      h.push('<article class="project"><h3>' + esc(p.name) + "</h3><p>" + esc(p.description) + "</p>");
+      h.push('<article class="project"><h3>' + esc(p.name) + (p.status ? ' <span class="meta">' + esc(p.status) + "</span>" : "") + "</h3><p>" + esc(p.description) + "</p>");
       if (p.highlights && p.highlights.length) {
         h.push("<ul>" + p.highlights.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>");
       }
-      h.push('<ul class="chips">' + p.stack.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>");
+      h.push('<p class="meta">' + esc(p.stack.join(", ")) + "</p>");
       if (p.role) h.push('<p class="meta">My part: ' + esc(p.role) + "</p>");
-      h.push('<p class="linkrow">' + (p.live ? link(p.live, "Live") : "") + (p.repo ? link(p.repo, "Source on GitHub") : "") + "</p></article>");
+      if (p.live || p.repo) {
+        h.push('<p class="linkrow">' + (p.live ? link(p.live, "Live site") : "") + (p.repo ? link(p.repo, "Source on GitHub") : "") + "</p>");
+      }
+      h.push("</article>");
     });
 
     h.push("<h2>Skills</h2><dl>");
-    Object.keys(D.skills || {}).forEach(function (k) {
-      h.push("<dt>" + esc(k.charAt(0).toUpperCase() + k.slice(1)) + "</dt><dd>" + D.skills[k].map(esc).join(", ") + "</dd>");
+    (D.skills || []).forEach(function (g) {
+      h.push("<dt>" + esc(skillLabel(g)) + "</dt><dd>" + g.items.map(esc).join(", ") + "</dd>");
     });
     h.push("</dl>");
 
@@ -300,18 +277,31 @@
     if ((D.experience || []).length) {
       h.push("<h2>Experience</h2>");
       D.experience.forEach(function (x) {
-        h.push("<p><strong>" + esc(x.role) + ", " + esc(x.org) + "</strong>" + (x.period ? " (" + esc(x.period) + ")" : "") +
+        var when = [x.period, x.location].filter(Boolean).join(", ");
+        h.push("<p><strong>" + esc(x.role) + ", " + esc(x.org) + "</strong>" + (when ? '<br><span class="meta">' + esc(when) + "</span>" : "") +
           "<br>" + esc(x.summary) + (x.link ? " " + link(x.link, "View work") : "") + "</p>");
+        if (x.points && x.points.length) h.push("<ul>" + x.points.map(function (pt) { return "<li>" + esc(pt) + "</li>"; }).join("") + "</ul>");
       });
     }
+
+    if ((D.certifications || []).length) {
+      h.push("<h2>Certifications</h2><ul>");
+      D.certifications.forEach(function (x) {
+        var meta = [x.issuer, x.issued ? "issued " + x.issued : ""].filter(Boolean).join(", ");
+        h.push("<li>" + esc(x.title) + (meta ? ' <span class="meta">(' + esc(meta) + ")</span>" : "") + "</li>");
+      });
+      h.push("</ul>");
+    }
+
+    h.push("<h2>Contact</h2><p>" + link("mailto:" + L.email, L.email) + "</p>");
+
     var edu = (D.education || []).filter(function (e) { return e.degree; });
     if (edu.length) {
-      h.push("<h2>Education</h2>");
-      edu.forEach(function (e) {
-        h.push("<p>" + esc(e.degree) + (e.institution ? ", " + esc(e.institution) : "") + (e.period ? " (" + esc(e.period) + ")" : "") + "</p>");
-      });
+      h.push('<p class="meta plain-edu">' + edu.map(function (e) {
+        return esc(e.degree + (e.institution ? ", " + e.institution : "") + (e.period ? " (" + e.period + ")" : ""));
+      }).join("<br>") + "</p>");
     }
-    h.push("<h2>Contact</h2><p>" + link("mailto:" + L.email, L.email) + "</p></div>");
+    h.push("</div>");
     return h.join("");
   }
   function setInert(on) {
@@ -337,15 +327,12 @@
     if (refocus && !state.busy && !isTouch()) input.focus({ preventScroll: true });
   }
   plainBtn.addEventListener("click", showPlain);
-  themeBtn.addEventListener("click", function () {
-    var i = S.THEMES.indexOf(state.theme);
-    applyTheme(S.THEMES[(i + 1) % S.THEMES.length]);
+  Array.prototype.forEach.call(document.querySelectorAll(".th"), function (b) {
+    b.addEventListener("click", function () { applyTheme(b.getAttribute("data-theme-pick")); });
   });
 
   /* ---------- go ---------- */
-  applyTheme(lget("theme") || "midnight", false);
+  applyTheme(lget("theme") || (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "chalk" : "graphite"), false);
   refreshPrompt();
-  tickClock();
-  setInterval(tickClock, 30000);
   boot({ fast: sget("booted") === "1" });
 })();
