@@ -38,7 +38,7 @@ const PORTFOLIO = {
   education: [
     {
       degree: "B.Tech, Computer Science Engineering",
-      institution: "LNCT Group of Colleges",
+      institution: "LNCT Group of Colleges (LNCTE)",
       period: "2024–2028"
     }
   ],
