@@ -1,218 +1,338 @@
-/*
- * data.js — ALL of your portfolio content lives here.
- * Edit this file to change what the terminal shows. No other file needs to change.
- *
- * Fields left as "" or [] are hidden automatically:
- *   projects: live, repo, status, role, highlights   experience: period, location, points, link
- *   education: institution, period                   links: resume
+/*!
+ * terminal.js — the browser side of the portfolio.
+ * Renders shell output, runs the boot sequence, handles keyboard/touch input,
+ * theme switching and the plain (non-terminal) view. Content comes from data.js,
+ * command logic from shell.js.
  */
-const PORTFOLIO = {
-  name: "Ashutosh Mishra",
-  handle: "ashutosh",              // shows up as guest@ashutosh in the prompt
-  role: "Full-Stack & Application Developer",
-  now: "Intern at Atavishaala",
-  award: "Future 6.0 national 1st runner-up",
-  tagline: "I build things, break them, fix them, and learn along the way.",
-  focus: ["Full Stack", "Android Apps", "AI/ML"],
-  loop: "Code → Debug → Improve → Repeat",
+(function () {
+  "use strict";
 
-  links: {
-    github: "https://github.com/ashu-mishra06",
-    linkedin: "https://www.linkedin.com/in/ashutosh-mishra-7394ab32a",
-    email: "mishrashu777@gmail.com",
-    resume: "Ashutosh_Mishra_Resume.pdf"   // replace that PDF in the folder to update your résumé
-  },
+  var D = window.PORTFOLIO;
+  var S = window.PortfolioShell;
+  var esc = S.esc, c = S.c, cmdLink = S.cmdLink;
+  var shell = S.createShell(D);
 
-  about: [
-    "Full-stack and Android developer. I build web apps, mobile apps and small AI/ML tools, and I learn by shipping real projects.",
-    "My work spans real-time communication, offline-first mobile systems, AI-assisted tooling and cloud-backed apps.",
-    "Where I work most:",
-    "- Full-stack web (React, Next.js, Node.js, Firebase)",
-    "- Android apps (Kotlin, Jetpack Compose, React Native)",
-    "- AI / ML (TensorFlow Lite, Pandas, NumPy)",
-    "Right now I'm an Application Developer intern at Atavishaala.",
-    "I was part of the team that won national 1st runner-up at Future 6.0, and I regularly work in teams through GitHub, documentation and hackathons (SIH 2026)."
-  ],
+  function $(id) { return document.getElementById(id); }
+  var out = $("out"), row = $("row"), input = $("cmd"), promptEl = $("prompt"), screen = $("screen");
+  var titlePath = $("title-path");
+  var plainBtn = $("btn-plain"), plain = $("plain");
 
-  // Kept low-key on purpose: shown in ~/education.txt and at the bottom of the plain view only.
-  education: [
-    {
-      degree: "B.Tech, Computer Science Engineering",
-      institution: "LNCT Group of Colleges",
-      period: "2024–2028"
+  var state = { theme: "graphite", busy: true, histIdx: -1, draft: "", plainOpen: false, bootId: 0 };
+  var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- safe storage (private mode / blocked storage must not break the site) ---------- */
+  function lget(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lset(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+  function sget(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function sset(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+  function isTouch() { return window.matchMedia && matchMedia("(pointer: coarse)").matches; }
+
+  /* ---------- output ---------- */
+  function print(html, cls) {
+    var d = document.createElement("div");
+    d.className = "ln" + (cls ? " " + cls : "");
+    d.innerHTML = html;
+    out.appendChild(d);
+    return d;
+  }
+  function scrollDown() { screen.scrollTop = screen.scrollHeight; }
+  function refreshPrompt() {
+    promptEl.innerHTML = shell.promptHTML();
+    titlePath.textContent = shell.cwdLabel();
+  }
+  function ctx() { return { theme: state.theme }; }
+
+  /* ---------- themes ---------- */
+  function applyTheme(name, persist) {
+    if (S.THEMES.indexOf(name) < 0) name = "graphite";
+    state.theme = name;
+    document.documentElement.setAttribute("data-theme", name);
+    Array.prototype.forEach.call(document.querySelectorAll(".th"), function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-theme-pick") === name ? "true" : "false");
+    });
+    var bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && bg) meta.setAttribute("content", bg);
+    if (persist !== false) lset("theme", name);
+  }
+
+  /* ---------- tmux window highlight ---------- */
+  function markWindow(line) {
+    var l = line.trim(), idx = -1;
+    if (/^home\b/.test(l)) idx = 0;
+    else if (/^about\b|about\.md/.test(l)) idx = 1;
+    else if (/^projects\b|\/projects\//.test(l)) idx = 2;
+    else if (/^skills\b/.test(l)) idx = 3;
+    else if (/^achievements\b|\/achievements\//.test(l)) idx = 4;
+    else if (/^contact\b/.test(l)) idx = 5;
+    else if (/^help\b/.test(l)) idx = 6;
+    if (idx < 0) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".win"), function (w) {
+      w.classList.toggle("active", Number(w.getAttribute("data-win")) === idx);
+    });
+  }
+  /* ---------- running commands ---------- */
+  function openUrl(url) {
+    if (/^mailto:/i.test(url)) window.location.href = url;
+    else window.open(url, "_blank", "noopener,noreferrer");
+  }
+  function handleAction(a) {
+    if (a.type === "clear") out.textContent = "";
+    else if (a.type === "theme") applyTheme(a.name);
+    else if (a.type === "open") openUrl(a.url);
+    else if (a.type === "plain") showPlain();
+    else if (a.type === "reboot") { state.busy = true; setTimeout(function () { boot({ fast: false }); }, 350); }
+  }
+  function runLine(line) {
+    if (state.busy) return;
+    line = String(line);
+    print(shell.promptHTML() + " " + '<span class="typed">' + esc(line) + "</span>", "echo");
+    var res = shell.exec(line, ctx());
+    res.html.forEach(function (h) { print(h); });
+    res.actions.forEach(handleAction);
+    markWindow(line);
+    refreshPrompt();
+    scrollDown();
+  }
+
+  /* ---------- keyboard ---------- */
+  function setInput(v) {
+    input.value = v;
+    var n = v.length;
+    requestAnimationFrame(function () { try { input.setSelectionRange(n, n); } catch (e) { /* ignore */ } });
+  }
+  function submit() {
+    var v = input.value;
+    input.value = "";
+    state.histIdx = -1;
+    state.draft = "";
+    if (!v.trim()) { print(shell.promptHTML(), "echo"); scrollDown(); return; }
+    runLine(v);
+  }
+  input.addEventListener("keydown", function (e) {
+    if (state.busy) { e.preventDefault(); return; }
+    var h = shell.history();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submit();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!h.length) return;
+      if (state.histIdx === -1) { state.draft = input.value; state.histIdx = h.length - 1; }
+      else state.histIdx = Math.max(0, state.histIdx - 1);
+      setInput(h[state.histIdx]);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (state.histIdx === -1) return;
+      state.histIdx++;
+      if (state.histIdx >= h.length) { state.histIdx = -1; setInput(state.draft); }
+      else setInput(h[state.histIdx]);
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      var r = shell.complete(input.value);
+      var changed = r.line !== input.value;
+      if (changed) setInput(r.line);
+      if (!changed && r.options.length > 1) {
+        print(shell.promptHTML() + " " + '<span class="typed">' + esc(input.value) + "</span>", "echo");
+        print(c("dim", r.options.join("  ")));
+        scrollDown();
+      }
+    } else if (e.ctrlKey && (e.key === "l" || e.key === "L")) {
+      e.preventDefault();
+      out.textContent = "";
+    } else if (e.ctrlKey && (e.key === "c" || e.key === "C") && !window.getSelection().toString()) {
+      e.preventDefault();
+      print(shell.promptHTML() + " " + '<span class="typed">' + esc(input.value) + "^C</span>", "echo");
+      input.value = "";
+      state.histIdx = -1;
+      scrollDown();
     }
-  ],
+  });
 
-  skillLabels: { "cloud-data": "Cloud & data", "ai-ml": "AI / ML" },
-  skills: [
-    { id: "languages", label: "Languages", items: ["Python", "C++", "JavaScript", "Kotlin"] },
-    { id: "web", label: "Web",
-      items: ["HTML", "CSS", "React.js", "Next.js", "Vite", "Node.js", "Express.js", "FastAPI", "Tailwind CSS", "REST APIs"] },
-    { id: "mobile", label: "Android & mobile",
-      items: ["Jetpack Compose", "Android Studio", "Gradle", "React Native", "Expo"] },
-    { id: "cloud-data", label: "Cloud & data",
-      items: ["Firebase Authentication", "Cloud Firestore", "SQLite", "DataStore"] },
-    { id: "ai-ml", label: "AI / ML",
-      items: ["TensorFlow Lite", "scikit-learn", "Pandas", "NumPy"] },
-    { id: "tools", label: "Tools", items: ["Git", "GitHub", "VS Code", "Jupyter Notebook"] }
-  ],
-
-  projects: [
-    {
-      id: "roadsos",
-      name: "RoadSOS",
-      summary: "Offline-first Android crash-emergency assistant.",
-      description:
-        "An Android emergency-response prototype that detects crash-like audio events and moves through a Detect → Countdown → Alert → Locate → Assist → Record workflow, even without internet. Built with Team Fuzeppers.",
-      highlights: [
-        "On-device audio monitoring with a TensorFlow Lite helper",
-        "False-alarm cancellation before anything is sent",
-        "Emergency SMS and call actions, with current or last-known location fallback",
-        "Offline lookup of hospitals, police stations, vehicle repair and roadside assistance",
-        "MVVM-style architecture: Jetpack Compose, DataStore, SQLite, foreground services, local emergency history",
-        "Ships a 1.1 MB TFLite model and a 7.46 MB local database"
-      ],
-      stack: ["Kotlin", "Jetpack Compose", "TensorFlow Lite", "SQLite", "DataStore"],
-      role: "Database, frontend, app integration, documentation",
-      status: "",
-      repo: "https://github.com/ashu-mishra06/RoadSOS",
-      live: ""
-    },
-    {
-      id: "couple-connect",
-      name: "Couple-connect",
-      summary: "Retro-brutalist private app for couples: chat, snaps and opt-in location.",
-      description:
-        "A private communication platform with email/password sign-in, Couple ID creation and joining, shared couple access and profile management. Designed and built end to end.",
-      highlights: [
-        "Real-time messaging and photo sharing on Cloud Firestore, with a live snap feed and partner status",
-        "Consent-based location sharing: opt-in, latest-location map and location history",
-        "Firebase configuration and Firestore security rules for a cloud-backed workflow"
-      ],
-      stack: ["React", "Vite", "Firebase Authentication", "Cloud Firestore", "Netlify"],
-      role: "Solo project, built end to end",
-      status: "",
-      repo: "https://github.com/ashu-mishra06/Couple-connect-",
-      live: "https://coupascup.netlify.app/"
-    },
-    {
-      id: "chatgraph",
-      name: "ChatGraph",
-      summary: "Visual navigation for long ChatGPT conversations.",
-      description:
-        "A platform that turns a long ChatGPT conversation into connected nodes, so you can find earlier context faster.",
-      highlights: [
-        "Browser extension that extracts conversation data locally, with no ChatGPT credentials needed",
-        "Modular system: browser extension, frontend, backend and AI/search components",
-        "Privacy-conscious data handling, searchable context and graph-based navigation"
-      ],
-      stack: ["React", "Next.js", "Browser Extension", "Graph Visualization", "AI/Search"],
-      role: "",
-      status: "In development",
-      repo: "",
-      live: ""
-    },
-    {
-      id: "burn-in",
-      name: "Burn-In (SIH 2026)",
-      summary: "AI anomaly detection for component burn-in screening.",
-      description:
-        "Statistical outlier detection plus drift prediction, with a PASS/REJECT dashboard. Team project for SIH 2026; the repository is owned by teammate vivek-jangela.",
-      highlights: [
-        "Statistical outlier detection on burn-in readings",
-        "Drift prediction",
-        "PASS/REJECT dashboard"
-      ],
-      stack: ["React", "FastAPI", "scikit-learn", "Pandas"],
-      role: "FastAPI backend and frontend/backend integration",
-      status: "",
-      repo: "https://github.com/vivek-jangela/burn-in-frontend",
-      live: ""
-    },
-    {
-      id: "recurly",
-      name: "Recurly",
-      summary: "Subscription management mobile app.",
-      description: "A subscription management app built with React Native and the Expo framework. Designed and built end to end.",
-      highlights: [],
-      stack: ["React Native", "Expo"],
-      role: "Solo project, built end to end",
-      status: "",
-      repo: "https://github.com/ashu-mishra06/Recurly",
-      live: ""
-    },
-    {
-      id: "python-cognifyz",
-      name: "Python Internship Tasks",
-      summary: "Task solutions from the Cognifyz Python internship.",
-      description: "Structured Python tasks across two project levels: programming logic, data structures and problem solving.",
-      highlights: [],
-      stack: ["Python", "Git"],
-      role: "Solo, built end to end",
-      status: "",
-      repo: "https://github.com/ashu-mishra06/python_projects_cognifyz",
-      live: ""
+  /* ---------- clicks: commands, chips, focus ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest("[data-cmd]") : null;
+    if (t) {
+      e.preventDefault();
+      if (state.plainOpen) hidePlain(true);
+      runLine(t.getAttribute("data-cmd"));
+      if (!isTouch()) input.focus({ preventScroll: true });
+      return;
     }
-  ],
-
-  achievements: [
-    {
-      id: "future-6-runner-up",
-      title: "Future 6.0: National 1st Runner-Up",
-      detail: "Won 1st runner-up at Future 6.0, a national-level event in Bhavnagar. The team started from a road-safety problem."
-    },
-    {
-      id: "sih-2026",
-      title: "Smart India Hackathon 2026",
-      detail: "Participant with Team Fuzeppers. Contributed to Burn-In, an AI anomaly-detection project for SIH 2026."
-    },
-    {
-      id: "github-pull-shark",
-      title: "GitHub Pull Shark",
-      detail: "GitHub achievement badge for getting pull requests merged."
-    },
-    {
-      id: "github-yolo",
-      title: "GitHub YOLO",
-      detail: "GitHub achievement badge for merging a pull request without a code review."
+    if (state.plainOpen || state.busy) return;
+    if (e.target.closest("a, button")) return;
+    var sel = window.getSelection && window.getSelection().toString();
+    if (!sel) input.focus({ preventScroll: true });
+  });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target;
+    if (t && t.getAttribute && t.getAttribute("role") === "button" && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      t.click();
+      return;
     }
-  ],
-
-  certifications: [
-    { id: "oracle-foundations-associate", title: "Oracle Certified Foundations Associate", issuer: "Oracle", issued: "Oct 2025", expires: "Oct 2027" },
-    { id: "data-structures-bootcamp", title: "Data Structures Bootcamp", issuer: "GeeksforGeeks", issued: "Nov 2025", expires: "" },
-    { id: "python-certification", title: "Python Certification", issuer: "", issued: "", expires: "" },
-    { id: "the-ai-advantage", title: "The AI Advantage", issuer: "", issued: "", expires: "" }
-  ],
-
-  experience: [
-    {
-      id: "atavishaala-application-developer",
-      role: "Application Developer (Intern)",
-      org: "Atavishaala",
-      period: "Sep 2026 – Present",
-      location: "",
-      summary: "Application developer internship, started September 2026.",
-      points: [],
-      link: ""
-    },
-    {
-      id: "cognifyz-python-internship",
-      role: "Python Development Intern",
-      org: "Cognifyz Technologies",
-      period: "Dec 2025 – Jan 2026",
-      location: "Remote",
-      summary: "Completed structured Python development tasks across two project levels.",
-      points: [
-        "Wrote programs for programming logic, data structures and problem solving",
-        "Applied modular programming, debugging and clean-code practices",
-        "Used Git and organised the finished work into a documented repository",
-        "Reviewed implementations with mentors to improve code quality"
-      ],
-      link: "https://github.com/ashu-mishra06/python_projects_cognifyz"
+    if (state.plainOpen) { if (e.key === "Escape") hidePlain(true); return; }
+    if (!state.busy && t !== input && t.tagName !== "BUTTON" && t.tagName !== "A" &&
+        e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      input.focus({ preventScroll: true });
     }
-  ]
-};
+  });
 
-if (typeof module === "object" && module.exports) module.exports = PORTFOLIO;
-else window.PORTFOLIO = PORTFOLIO;
+  /* ---------- boot sequence ---------- */
+  function bootLines() {
+    return [
+      [c("dim", "ashutosh-os 6.9 x86_64"), 150],
+      [c("dim", "mounting /home/guest (read-only)"), 130],
+      [c("dim", "loading " + (D.projects || []).length + " projects"), 130],
+      [c("dim", "ready"), 260]
+    ];
+  }
+  function boot(opts) {
+    var myBoot = ++state.bootId;
+    var skip = !!(opts && opts.fast) || reduceMotion;
+    state.busy = true;
+    row.hidden = true;
+    out.setAttribute("aria-live", "off");
+    out.textContent = "";
+    state.histIdx = -1;
+    input.value = "";
+
+    function onSkip() { skip = true; }
+    window.addEventListener("keydown", onSkip);
+    window.addEventListener("pointerdown", onSkip);
+    function wait(ms) { return skip ? Promise.resolve() : new Promise(function (r) { setTimeout(r, ms); }); }
+
+    var chain = Promise.resolve();
+    if (!skip) {
+      bootLines().forEach(function (l) {
+        chain = chain.then(function () {
+          if (myBoot !== state.bootId || skip) return;
+          print(l[0]);
+          return wait(l[1]);
+        });
+      });
+    }
+    return chain.then(function () {
+      window.removeEventListener("keydown", onSkip);
+      window.removeEventListener("pointerdown", onSkip);
+      if (myBoot !== state.bootId) return;
+      out.textContent = "";
+      shell.exec("home", ctx(), { record: false }).html.forEach(function (h) { print(h); });
+      sset("booted", "1");
+      state.busy = false;
+      out.setAttribute("aria-live", "polite");
+      row.hidden = false;
+      refreshPrompt();
+      if (!isTouch()) input.focus({ preventScroll: true });
+      screen.scrollTop = 0;
+    });
+  }
+
+  /* ---------- plain (non-terminal) view ---------- */
+  function buildPlain() {
+    var L = D.links, h = [];
+    function link(url, text) { return '<a href="' + esc(S.safeUrl(url)) + '" target="_blank" rel="noopener noreferrer">' + esc(text) + "</a>"; }
+    function skillLabel(g) { return g.label || (D.skillLabels && D.skillLabels[g.id]) || g.id; }
+    h.push('<div class="plain-inner">');
+    h.push('<button type="button" class="plain-close" id="plain-close">Back to terminal (Esc)</button>');
+    h.push("<h1>" + esc(D.name) + "</h1>");
+    h.push('<p class="lede">' + esc(D.role) + (D.now ? ". Now: " + esc(D.now) : "") + ".</p>");
+    h.push('<p class="linkrow">' + link(L.github, "GitHub") + link(L.linkedin, "LinkedIn") + link("mailto:" + L.email, L.email) +
+      (L.resume ? link(L.resume, "Résumé (PDF)") : "") + "</p>");
+
+    h.push("<h2>About</h2>");
+    var list = false;
+    (D.about || []).forEach(function (line) {
+      var isLi = /^- /.test(line);
+      if (isLi && !list) { h.push("<ul>"); list = true; }
+      if (!isLi && list) { h.push("</ul>"); list = false; }
+      h.push(isLi ? "<li>" + esc(line.slice(2)) + "</li>" : "<p>" + esc(line) + "</p>");
+    });
+    if (list) h.push("</ul>");
+
+    h.push("<h2>Projects</h2>");
+    (D.projects || []).forEach(function (p) {
+      h.push('<article class="project"><h3>' + esc(p.name) + (p.status ? ' <span class="meta">' + esc(p.status) + "</span>" : "") + "</h3><p>" + esc(p.description) + "</p>");
+      if (p.highlights && p.highlights.length) {
+        h.push("<ul>" + p.highlights.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>");
+      }
+      h.push('<p class="meta">' + esc(p.stack.join(", ")) + "</p>");
+      if (p.role) h.push('<p class="meta">My part: ' + esc(p.role) + "</p>");
+      if (p.live || p.repo) {
+        h.push('<p class="linkrow">' + (p.live ? link(p.live, "Live site") : "") + (p.repo ? link(p.repo, "Source on GitHub") : "") + "</p>");
+      }
+      h.push("</article>");
+    });
+
+    h.push("<h2>Skills</h2><dl>");
+    (D.skills || []).forEach(function (g) {
+      h.push("<dt>" + esc(skillLabel(g)) + "</dt><dd>" + g.items.map(esc).join(", ") + "</dd>");
+    });
+    h.push("</dl>");
+
+    h.push("<h2>Achievements</h2><ul>");
+    (D.achievements || []).forEach(function (x) { h.push("<li><strong>" + esc(x.title) + ".</strong> " + esc(x.detail) + "</li>"); });
+    h.push("</ul>");
+
+    if ((D.experience || []).length) {
+      h.push("<h2>Experience</h2>");
+      D.experience.forEach(function (x) {
+        var when = [x.period, x.location].filter(Boolean).join(", ");
+        h.push("<p><strong>" + esc(x.role) + ", " + esc(x.org) + "</strong>" + (when ? '<br><span class="meta">' + esc(when) + "</span>" : "") +
+          "<br>" + esc(x.summary) + (x.link ? " " + link(x.link, "View work") : "") + "</p>");
+        if (x.points && x.points.length) h.push("<ul>" + x.points.map(function (pt) { return "<li>" + esc(pt) + "</li>"; }).join("") + "</ul>");
+      });
+    }
+
+    if ((D.certifications || []).length) {
+      h.push("<h2>Certifications</h2><ul>");
+      D.certifications.forEach(function (x) {
+        var meta = [x.issuer, x.issued ? "issued " + x.issued : ""].filter(Boolean).join(", ");
+        h.push("<li>" + esc(x.title) + (meta ? ' <span class="meta">(' + esc(meta) + ")</span>" : "") + "</li>");
+      });
+      h.push("</ul>");
+    }
+
+    h.push("<h2>Contact</h2><p>" + link("mailto:" + L.email, L.email) + "</p>");
+
+    var edu = (D.education || []).filter(function (e) { return e.degree; });
+    if (edu.length) {
+      h.push('<p class="meta plain-edu">' + edu.map(function (e) {
+        return esc(e.degree + (e.institution ? ", " + e.institution : "") + (e.period ? " (" + e.period + ")" : ""));
+      }).join("<br>") + "</p>");
+    }
+    h.push("</div>");
+    return h.join("");
+  }
+  function setInert(on) {
+    ["screen"].forEach(function (id) { $(id).inert = on; });
+    Array.prototype.forEach.call(document.querySelectorAll(".titlebar, .tmux"), function (el) { el.inert = on; });
+  }
+  function showPlain() {
+    if (state.plainOpen) return;
+    plain.innerHTML = buildPlain();
+    plain.hidden = false;
+    plain.scrollTop = 0;
+    state.plainOpen = true;
+    setInert(true);
+    $("plain-close").addEventListener("click", function () { hidePlain(true); });
+    $("plain-close").focus();
+  }
+  function hidePlain(refocus) {
+    if (!state.plainOpen) return;
+    plain.hidden = true;
+    plain.innerHTML = "";
+    state.plainOpen = false;
+    setInert(false);
+    if (refocus && !state.busy && !isTouch()) input.focus({ preventScroll: true });
+  }
+  plainBtn.addEventListener("click", showPlain);
+  Array.prototype.forEach.call(document.querySelectorAll(".th"), function (b) {
+    b.addEventListener("click", function () { applyTheme(b.getAttribute("data-theme-pick")); });
+  });
+
+  /* ---------- go ---------- */
+  applyTheme(lget("theme") || (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "chalk" : "graphite"), false);
+  refreshPrompt();
+  boot({ fast: sget("booted") === "1" });
+})();

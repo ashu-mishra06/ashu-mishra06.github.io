@@ -26,6 +26,9 @@ index.html          the page
 404.html            "no such file or directory" page for wrong URLs
 favicon.svg         browser tab icon
 Ashutosh_Mishra_Resume.pdf   your résumé; `resume` and `open resume` serve it
+robots.txt          tells search engines they may crawl the whole site
+sitemap.xml         the one page on this site, for Google/Bing to index
+<hex>.txt           IndexNow ownership key (see the SEO section below)
 .nojekyll           optional; tells GitHub Pages to serve the files exactly as they are
 css/style.css       layout, type and the three themes
 js/data.js          YOUR CONTENT: the only file you normally edit
@@ -33,6 +36,66 @@ js/shell.js         the virtual Linux shell (commands, filesystem, tab completio
 js/terminal.js      the browser side (boot sequence, keyboard, themes, plain view)
 tests/shell.test.js automated tests for the shell (node tests/shell.test.js)
 ```
+
+## SEO: what's set up, and how to do the rest yourself
+
+These files and tags are already in place so search engines and AI answer engines can find and understand
+the site. Everything below is free and needs no server or root access — just files in this repo and a
+few web dashboards.
+
+**Already done, no action needed:**
+- `robots.txt` and `sitemap.xml` at the root, so crawlers know the site is public and what page exists.
+- A `<script type="application/ld+json">` block in `index.html`'s `<head>` — structured data that tells
+  Google/Bing/AI crawlers your name, role and links (GitHub, LinkedIn) as machine-readable facts, not just prose.
+- `<link rel="canonical">` and `og:url` pointing at `https://ashu-mishra06.github.io/`.
+- An expanded `<noscript>` block: real project names, links and skills for any crawler or visitor that
+  doesn't run JavaScript (most modern crawlers do, but this removes the risk entirely).
+- A key file (`844e1aeae5f093234950757ed40e6111.txt`, containing just that string) proving you own this
+  domain, for IndexNow — see step 4 below.
+
+**⚠️ If you change your GitHub Pages URL or add a custom domain,** update the URL in four places: `robots.txt`,
+`sitemap.xml`, and the `canonical`/`og:url` tags in `index.html`. Search for `ashu-mishra06.github.io` and replace it.
+
+**⚠️ If you edit `js/data.js`** (add a project, change your role, etc.), the JSON-LD block and the
+`<noscript>` block in `index.html` won't update automatically — there's no build step. Edit them by hand
+to match, so search engines see the same facts as everyone else.
+
+### Do the rest manually (about 20 minutes total)
+
+**1. Google Search Console** — get indexed by Google, see search performance.
+   1. Go to [search.google.com/search-console](https://search.google.com/search-console) and sign in with any Google account.
+   2. Add property → choose **URL prefix** → enter `https://ashu-mishra06.github.io/`.
+   3. Verify ownership with the **HTML tag** method: Google gives you a `<meta name="google-site-verification" ...>` tag.
+      Paste it into `index.html`'s `<head>` (anywhere above `</head>`), commit and push, then click Verify.
+   4. Once verified, go to **Indexing → Sitemaps** in the left sidebar, enter `sitemap.xml`, click Submit.
+   5. Come back after a few days to see indexing status and any errors under **Pages**.
+
+**2. Bing Webmaster Tools** — same idea, and this is what feeds ChatGPT Search and Copilot answers.
+   1. Go to [bing.com/webmasters](https://www.bing.com/webmasters) and sign in with a Microsoft account.
+   2. Choose **Import from Google Search Console** — it pulls in your verified site in two clicks, no separate
+      verification file needed.
+   3. Under **Sitemaps**, submit `https://ashu-mishra06.github.io/sitemap.xml`.
+
+**3. IndexNow** — optional, but it's one command and pushes instant updates to Bing/Yandex without waiting for a crawl.
+   The key file is already in this repo. After any future update to the live site, run:
+   ```bash
+   curl "https://api.indexnow.org/indexnow?url=https://ashu-mishra06.github.io/&key=844e1aeae5f093234950757ed40e6111"
+   ```
+   A `200` response means it was accepted. Google doesn't participate in IndexNow, so keep using Search Console for Google.
+
+**4. Cross-link your profiles** (biggest impact, zero technical work):
+   - **GitHub** → Settings → Profile → add the portfolio URL to the "Website" field. Also add it to your
+     profile README (the repo named exactly `ashu-mishra06`, if you have one).
+   - **LinkedIn** → Edit intro → Contact info → Website → add the portfolio URL. Also add it under the
+     **Featured** section on your profile (Featured gets seen far more than Contact Info).
+   - Make sure the portfolio links back to both (it already does, via `contact`, `open github`/`open linkedin`,
+     and the plain view).
+
+**5. Check your work:**
+   - `https://search.google.com/test/rich-results` — paste your URL to confirm the JSON-LD is read correctly.
+   - `https://ashu-mishra06.github.io/robots.txt` and `/sitemap.xml` — should load directly in a browser.
+   - View source (`Ctrl+U`) on the live site and confirm the `<noscript>` block reads correctly — that's what
+     a JS-less crawler sees.
 
 ## Design notes
 
