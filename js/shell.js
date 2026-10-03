@@ -525,10 +525,14 @@
       rows.forEach(function (r) { res.html.push(c("k", pad(r[0], 11)) + esc(r[1])); });
     });
 
-    def("home", { group: "portfolio", usage: "home", desc: "the front page" }, function (args, res) {
+    def("home", { group: "portfolio", usage: "home", desc: "the front page" }, function (args, res, ctx) {
       var L = D.links;
+      // The page gets exactly one real <h1> (the first render, at boot). Re-running
+      // "home" later reprints the same text as a <p> so the document never ends up
+      // with two <h1> elements in one session.
+      var tag = ctx && ctx.asH1 ? "h1" : "p";
       res.html.push("");
-      res.html.push('<span class="hero-name">' + esc(D.name) + "</span>");
+      res.html.push("<" + tag + ' class="hero-name">' + esc(D.name) + "</" + tag + ">");
       res.html.push('<span class="hero-role">' + esc(D.role) + "</span>");
       res.html.push("");
       if (D.tagline) res.html.push(esc(D.tagline), "");

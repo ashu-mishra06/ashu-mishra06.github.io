@@ -40,7 +40,7 @@
     promptEl.innerHTML = shell.promptHTML();
     titlePath.textContent = shell.cwdLabel();
   }
-  function ctx() { return { theme: state.theme }; }
+  function ctx() { return { theme: state.theme, asH1: !state.h1Used }; }
 
   /* ---------- themes ---------- */
   function applyTheme(name, persist) {
@@ -218,6 +218,7 @@
       if (myBoot !== state.bootId) return;
       out.textContent = "";
       shell.exec("home", ctx(), { record: false }).html.forEach(function (h) { print(h); });
+      state.h1Used = true;
       sset("booted", "1");
       state.busy = false;
       out.setAttribute("aria-live", "polite");
