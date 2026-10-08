@@ -14,6 +14,21 @@
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://ashu-mishra06.github.io/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- ========================================================= -->
+  <!-- Security: Content Security Policy (CSP)                   -->
+  <!-- ========================================================= -->
+  <meta http-equiv="Content-Security-Policy" 
+    content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://omnidim.io https://*.omnidim.io https://widget.omnidim.io https://fonts.googleapis.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://omnidim.io https://*.omnidim.io;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' https://omnidim.io https://*.omnidim.io wss://omnidim.io wss://*.omnidim.io;
+      frame-src 'self' https://omnidim.io https://*.omnidim.io;
+      img-src 'self' data: https://omnidim.io https://*.omnidim.io;
+    ">
+
   <!--
     Structured data (JSON-LD): tells Google and AI answer engines who this
     page is about. Keep the fields below in sync with js/data.js by hand;
@@ -55,32 +70,6 @@
       } catch (e) {}
     })();
   </script>
-  <script id="omnidimension-web-widget" async src="https://omnidim.io/web_widget.js?secret_key=${process.env.SECRET_KEY}" >
-  </script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>Ashutosh Mishra | Full-stack and Android developer</title>
-  <meta name="description" content="Portfolio of Ashutosh Mishra...">
-  <meta name="theme-color" content="#1e2227">
-  <meta name="color-scheme" content="dark light">
-  
-  <!-- ✅ ADD: Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" 
-    content="
-      default-src 'self';
-      script-src 'self' 'unsafe-inline' https://widget.omnidim.io https://*.omnidim.io https://fonts.googleapis.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.omnidim.io;
-      font-src 'self' https://fonts.gstatic.com;
-      connect-src 'self' https://*.omnidim.io wss://*.omnidim.io;
-      frame-src https://*.omnidim.io;
-      img-src 'self' data: https://*.omnidim.io;
-    ">
-  <!-- ... rest of existing <head> ... -->
-  <meta property="og:type" content="website">
-
-  <!-- ... -->
-  <link rel="stylesheet" href="css/style.css">
-  
 </head>
 <body>
   <header class="bar top">
@@ -146,23 +135,20 @@
 
   <div id="plain" class="plain" hidden role="dialog" aria-modal="true" aria-label="Regular page view of the portfolio"></div>
 
+  <!-- Portfolio terminal scripts -->
   <script src="js/data.js"></script>
   <script src="js/shell.js"></script>
   <script src="js/terminal.js"></script>
   <script src="js/main.js" type="module"></script>
-  
-  <!-- ✅ ADD: OmniDim AI Chat Widget -->
-  <script 
-    src="https://widget.omnidim.io/widget.js" 
-    data-widget-key="${process.env.SECRET_KEY}"
-    async
-    defer>
-  </script>
 
-  <noscript>
-    <p style="color:#999;text-align:center;padding:1em;font-size:0.8em;">
-      This site features an AI chat assistant. Enable JavaScript to use it.
-    </p>
-  </noscript>
+  <!-- ========================================================= -->
+  <!-- OmniDimension AI Chat Widget                              -->
+  <!-- ========================================================= -->
+   
+  <script 
+    id="omnidimension-web-widget" 
+    async 
+    src="https://omnidim.io/web_widget.js?secret_key=3baba17f3a79a752b9bc4486135b28fb">
+  </script>
 </body>
 </html>
