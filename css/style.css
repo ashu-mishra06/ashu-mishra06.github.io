@@ -229,3 +229,26 @@ a:hover, .cmd:hover { color: var(--strong); text-decoration-color: var(--acc); }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* Ensure widget floats above the terminal interface */
+[id*="omnidim-widget"],
+[class*="omnidim-widget"],
+iframe[src*="omnidim"] {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+/* On mobile: shift widget up so it doesn't cover the terminal input */
+@media (max-width: 640px) {
+  [id*="omnidim-widget"],
+  [class*="omnidim-widget"],
+  iframe[src*="omnidim"] {
+    bottom: 70px !important; /* above the terminal input bar */
+    right: 10px !important;
+  }
+}
+/* If the widget has a toggle button, style it to match the theme */
+[id*="omnidim-widget"] button,
+[class*="omnidim-widget"] button {
+  border-radius: 50% !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
