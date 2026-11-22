@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Ashutosh Mishra | Full-stack and Android developer</title>
-  <meta name="description" content="Portfolio of Ashutosh Mishra, a full-stack and application developer building web apps, Android apps and AI/ML tools. Explore it like a Linux terminal.">
+  <meta name="description" content="Portfolio of Ashutosh Mishra, a full-stack and application developer building web apps, Android apps and AI/ML tools. Explore it like a Linux Mint OS terminal.">
   <meta name="theme-color" content="#1e2227">
   <meta name="color-scheme" content="dark light">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Ashutosh Mishra | Full-stack and Android developer">
-  <meta property="og:description" content="A portfolio you explore from a Linux terminal: ls, cd, cat, grep and more.">
+  <meta property="og:description" content="A portfolio you explore from a Linux Mint terminal: ls, cd, cat, grep and more.">
   <meta property="og:url" content="https://ashu-mishra06.github.io/">
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://ashu-mishra06.github.io/">
@@ -42,7 +42,7 @@
     "alternateName": "Ashu Mishra",
     "url": "https://ashu-mishra06.github.io/",
     "jobTitle": "Full-Stack & Application Developer",
-    "description": "Full-stack and Android developer building web apps, mobile apps and AI/ML tools.",
+    "description": "Full-stack and Android developer building web apps, mobile apps and AI/ML tools. App Development Intern at Atavishaala. Future Yi 6.0 national 1st runner-up.",
     "email": "mailto:mishrashu777@gmail.com",
     "alumniOf": {
       "@type": "CollegeOrUniversity",
@@ -53,7 +53,7 @@
       "https://github.com/ashu-mishra06",
       "https://www.linkedin.com/in/ashutosh-mishra-7394ab32a"
     ],
-    "knowsAbout": ["Python", "JavaScript", "Kotlin", "React", "Firebase", "Android Development", "Machine Learning"]
+    "knowsAbout": ["Python", "JavaScript", "TypeScript", "Kotlin", "React", "React Native", "Next.js", "FastAPI", "Firebase", "Android Development", "Machine Learning", "Jetpack Compose", "TensorFlow Lite", "Expo", "Streamlit", "scikit-learn"]
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,74 +72,282 @@
   </script>
 </head>
 <body>
-  <header class="bar top">
-    <div class="wrap bar-in">
-      <span class="title" id="title"><span class="dim">guest@ashutosh:</span> <span id="title-path">~</span></span>
-      <span class="tools">
-        <button type="button" id="btn-plain" title="Show a regular page instead of the terminal">plain</button>
-        <span class="themes" role="group" aria-label="Colour theme">
-          <button type="button" class="th" data-theme-pick="graphite" aria-pressed="true" title="Dark theme">dark</button>
-          <button type="button" class="th" data-theme-pick="chalk" aria-pressed="false" title="Light theme">light</button>
+
+  <!-- ========================================================= -->
+  <!-- BOOT SPLASH                                               -->
+  <!-- ========================================================= -->
+  <div id="boot-splash">
+    <div class="splash-logo">
+      <!-- Linux Mint shield SVG -->
+      <svg class="splash-mint-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="mintGrad" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#2ECC71"/>
+            <stop offset="100%" stop-color="#1a9e54"/>
+          </linearGradient>
+        </defs>
+        <!-- Shield outline -->
+        <path d="M50 5 L90 20 L90 55 Q90 80 50 95 Q10 80 10 55 L10 20 Z"
+              fill="url(#mintGrad)" opacity="0.15"/>
+        <path d="M50 5 L90 20 L90 55 Q90 80 50 95 Q10 80 10 55 L10 20 Z"
+              stroke="#2ECC71" stroke-width="3" fill="none"/>
+        <!-- Inner M letter stylized -->
+        <text x="50" y="62" font-family="monospace" font-size="38" font-weight="700"
+              fill="#2ECC71" text-anchor="middle">M</text>
+      </svg>
+      <div class="splash-name">Linux <span>Mint</span> 22</div>
+      <div class="splash-version">Ashu Edition &nbsp;·&nbsp; Cinnamon</div>
+    </div>
+    <div class="splash-bar-wrap">
+      <div class="splash-bar" id="splash-bar"></div>
+    </div>
+    <div class="splash-dots" id="splash-dots">&nbsp;</div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- CINNAMON DESKTOP                                          -->
+  <!-- ========================================================= -->
+  <div id="cinnamon-desktop" hidden>
+
+    <!-- Desktop area -->
+    <div id="desktop-area">
+      <!-- Desktop icons -->
+      <button class="desktop-icon" data-cmd="home" title="Terminal" style="top:20px;left:20px">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="48" height="48" rx="8" fill="#1e2a24"/>
+          <rect x="6" y="8" width="36" height="28" rx="3" fill="#2ECC71" fill-opacity=".12" stroke="#2ECC71" stroke-width="1.5"/>
+          <text x="24" y="28" font-family="monospace" font-size="13" fill="#2ECC71" text-anchor="middle">$_</text>
+        </svg>
+        <span class="desktop-icon-label">Terminal</span>
+      </button>
+      <button class="desktop-icon" data-cmd="projects" title="Projects" style="top:20px;left:100px">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="48" height="48" rx="8" fill="#1a2228"/>
+          <rect x="8" y="12" width="32" height="26" rx="3" fill="none" stroke="#86c5b1" stroke-width="1.5"/>
+          <line x1="8" y1="18" x2="40" y2="18" stroke="#86c5b1" stroke-width="1.5"/>
+          <circle cx="13" cy="15" r="1.5" fill="#e08a83"/>
+          <circle cx="18" cy="15" r="1.5" fill="#e0a030"/>
+          <circle cx="23" cy="15" r="1.5" fill="#2ECC71"/>
+        </svg>
+        <span class="desktop-icon-label">Projects</span>
+      </button>
+      <button class="desktop-icon" data-cmd="cat ~/about.md" title="About Me" style="top:20px;left:180px">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="48" height="48" rx="8" fill="#1a2228"/>
+          <circle cx="24" cy="18" r="8" fill="none" stroke="#86c5b1" stroke-width="1.5"/>
+          <path d="M12 40 Q12 30 24 30 Q36 30 36 40" fill="none" stroke="#86c5b1" stroke-width="1.5"/>
+        </svg>
+        <span class="desktop-icon-label">About</span>
+      </button>
+    </div>
+
+    <!-- Terminal Window (floating, draggable) -->
+    <div id="terminal-window">
+      <div class="window-titlebar" id="terminal-titlebar">
+        <div class="window-controls">
+          <button class="wc-btn wc-close" id="wc-close" title="Close"><em class="wc-icon">✕</em></button>
+          <button class="wc-btn wc-min"   id="wc-min"   title="Minimise"><em class="wc-icon">─</em></button>
+          <button class="wc-btn wc-max"   id="wc-max"   title="Maximise"><em class="wc-icon">□</em></button>
+        </div>
+        <span class="window-title" id="window-title-text">Terminal — guest@ashutosh: ~</span>
+        <!-- right-side theme toggle inside titlebar -->
+        <span style="display:inline-flex;align-items:center;gap:.5rem;flex:none;margin-left:auto">
+          <span class="themes" role="group" aria-label="Colour theme">
+            <button type="button" class="th panel-btn" data-theme-pick="graphite" aria-pressed="true" title="Dark theme">dark</button>
+            <button type="button" class="th panel-btn" data-theme-pick="chalk" aria-pressed="false" title="Light theme">light</button>
+          </span>
         </span>
-      </span>
-    </div>
-  </header>
-
-  <main id="screen" class="screen" aria-label="Terminal">
-    <div class="wrap">
-      <div id="out" role="log" aria-live="off">
-        <noscript>
-          <!--
-            Shown only to visitors and crawlers that don't run JavaScript.
-            This is real content, not a trick for search engines: the same
-            facts appear once the terminal loads. Keep it in sync with
-            js/data.js by hand when that file changes.
-          -->
-          <div class="ln"><h1 style="display:inline;font:inherit;font-weight:700;margin:0;">Ashutosh Mishra</h1> &mdash; Full-Stack &amp; Application Developer</div>
-          <div class="ln">Intern at Atavishaala. Full-stack and Android developer building web apps, mobile apps and small AI/ML tools; I build things, break them, fix them, and learn along the way.</div>
-          <div class="ln">Team win: Future 6.0, national 1st runner-up.</div>
-          <div class="ln">&nbsp;</div>
-          <div class="ln"><strong>Projects</strong></div>
-          <div class="ln">RoadSOS &mdash; offline-first Android crash-emergency assistant (Kotlin, Jetpack Compose, TensorFlow Lite). <a href="https://github.com/ashu-mishra06/RoadSOS">Source</a></div>
-          <div class="ln">Couple-connect &mdash; private app for couples: chat, snaps and opt-in location (React, Firebase). <a href="https://coupascup.netlify.app/">Live</a> | <a href="https://github.com/ashu-mishra06/Couple-connect-">Source</a></div>
-          <div class="ln">ChatGraph &mdash; visual navigation for long ChatGPT conversations (React, Next.js). In development.</div>
-          <div class="ln">Burn-In (SIH 2026) &mdash; AI anomaly detection for component burn-in screening (FastAPI, scikit-learn). <a href="https://github.com/vivek-jangela/burn-in-frontend">Source</a></div>
-          <div class="ln">Recurly &mdash; subscription management mobile app (React Native, Expo). <a href="https://github.com/ashu-mishra06/Recurly">Source</a></div>
-          <div class="ln">&nbsp;</div>
-          <div class="ln"><strong>Skills</strong>: Python, C++, JavaScript, Kotlin, React, Next.js, Node.js, Firebase, Jetpack Compose, TensorFlow Lite, Pandas, NumPy, Git.</div>
-          <div class="ln">&nbsp;</div>
-          <div class="ln">This portfolio is normally an interactive terminal; it needs JavaScript for that. Links:</div>
-          <div class="ln"><a href="https://github.com/ashu-mishra06">GitHub</a> | <a href="https://www.linkedin.com/in/ashutosh-mishra-7394ab32a">LinkedIn</a> | <a href="mailto:mishrashu777@gmail.com">Email</a> | <a href="Ashutosh_Mishra_Resume.pdf">Resume (PDF)</a></div>
-        </noscript>
       </div>
-      <div id="row" class="row" hidden>
-        <label id="prompt" for="cmd" class="prompt"></label>
-        <input id="cmd" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command">
+
+      <div class="window-body">
+        <!-- Legacy top bar (hidden by CSS when desktop active, shown as fallback) -->
+        <header class="bar top">
+          <div class="wrap bar-in">
+            <span class="title" id="title"><span class="dim">guest@ashutosh:</span> <span id="title-path">~</span></span>
+            <span class="tools">
+              <button type="button" id="btn-plain" title="Show a regular page instead of the terminal">plain</button>
+              <span class="themes" role="group" aria-label="Colour theme">
+                <button type="button" class="th" data-theme-pick="graphite" aria-pressed="true" title="Dark theme">dark</button>
+                <button type="button" class="th" data-theme-pick="chalk" aria-pressed="false" title="Light theme">light</button>
+              </span>
+            </span>
+          </div>
+        </header>
+
+        <main id="screen" class="screen" aria-label="Terminal">
+          <div class="wrap">
+            <div id="out" role="log" aria-live="off">
+              <noscript>
+                <!--
+                  Shown only to visitors and crawlers that don't run JavaScript.
+                  This is real content, not a trick for search engines: the same
+                  facts appear once the terminal loads. Keep it in sync with
+                  js/data.js by hand when that file changes.
+                -->
+                <div class="ln"><h1 style="display:inline;font:inherit;font-weight:700;margin:0;">Ashutosh Mishra</h1> &mdash; Full-Stack &amp; Application Developer</div>
+                <div class="ln">App Development Intern at Atavishaala. Open to internship opportunities.</div>
+                <div class="ln">Full-stack and Android developer building web apps, mobile apps and small AI/ML tools; I build things, break them, fix them, and learn along the way.</div>
+                <div class="ln">Team win: Future Yi 6.0, national 1st runner-up.</div>
+                <div class="ln">&nbsp;</div>
+                <div class="ln"><strong>Projects</strong></div>
+                <div class="ln">DriftGuard &mdash; AI component burn-in screening, Smart India Hackathon 2026 (FastAPI, scikit-learn, React). <a href="https://github.com/ashu-mishra06/Driftguard">Source</a> | <a href="https://driftguard.app/">Live</a></div>
+                <div class="ln">Neel-Tarang &mdash; Water-quality risk dashboard for Bhopal ghats (Python, Streamlit). <a href="https://neel-tarang.streamlit.app/">Live</a> | <a href="https://github.com/ashu-mishra06/Neel-Tarang">Source</a></div>
+                <div class="ln">RoadSOS &mdash; offline-first Android crash-emergency assistant (Kotlin, Jetpack Compose, TensorFlow Lite). <a href="https://github.com/ashu-mishra06/RoadSOS">Source</a></div>
+                <div class="ln">Couple-connect &mdash; private app for couples: chat, snaps and opt-in location (React, Firebase). <a href="https://coupascup.netlify.app/">Live</a> | <a href="https://github.com/ashu-mishra06/Couple-connect-">Source</a></div>
+                <div class="ln">ChatGraph &mdash; visual navigation for long ChatGPT conversations (React, Next.js). In development.</div>
+                <div class="ln">Recurly &mdash; subscription management mobile app (React Native, Expo). <a href="https://github.com/ashu-mishra06/Recurly">Source</a></div>
+                <div class="ln">&nbsp;</div>
+                <div class="ln"><strong>Skills</strong>: Python, C++, JavaScript, TypeScript, Kotlin, React, React Native, Next.js, Node.js, Expo, FastAPI, Firebase, Jetpack Compose, TensorFlow Lite, scikit-learn, Pandas, NumPy, Streamlit, Git.</div>
+                <div class="ln">&nbsp;</div>
+                <div class="ln">This portfolio is normally an interactive Linux Mint terminal; it needs JavaScript for that. Links:</div>
+                <div class="ln"><a href="https://github.com/ashu-mishra06">GitHub</a> | <a href="https://www.linkedin.com/in/ashutosh-mishra-7394ab32a">LinkedIn</a> | <a href="mailto:mishrashu777@gmail.com">Email</a> | <a href="Ashutosh_Mishra_Resume_2.pdf">Resume (PDF)</a></div>
+              </noscript>
+            </div>
+            <div id="row" class="row" hidden>
+              <label id="prompt" for="cmd" class="prompt"></label>
+              <input id="cmd" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Type a command">
+            </div>
+          </div>
+        </main>
+
+        <!-- Legacy bottom bar (hidden by CSS when desktop panel is used) -->
+        <nav class="bar bottom" aria-label="Quick commands">
+          <div class="wrap bar-in">
+            <span class="wins" id="wins">
+              <button type="button" class="win active" data-cmd="home" data-win="0">home</button>
+              <button type="button" class="win" data-cmd="cat ~/about.md" data-win="1">about</button>
+              <button type="button" class="win" data-cmd="projects" data-win="2">projects</button>
+              <button type="button" class="win" data-cmd="skills" data-win="3">skills</button>
+              <button type="button" class="win" data-cmd="achievements" data-win="4">achievements</button>
+              <button type="button" class="win" data-cmd="contact" data-win="5">contact</button>
+              <button type="button" class="win" data-cmd="help" data-win="6">help</button>
+            </span>
+          </div>
+        </nav>
       </div>
-    </div>
-  </main>
+    </div><!-- /#terminal-window -->
 
-  <nav class="bar bottom" aria-label="Quick commands">
-    <div class="wrap bar-in">
-      <span class="wins" id="wins">
-        <button type="button" class="win active" data-cmd="home" data-win="0">home</button>
-        <button type="button" class="win" data-cmd="cat ~/about.md" data-win="1">about</button>
-        <button type="button" class="win" data-cmd="projects" data-win="2">projects</button>
-        <button type="button" class="win" data-cmd="skills" data-win="3">skills</button>
-        <button type="button" class="win" data-cmd="achievements" data-win="4">achievements</button>
-        <button type="button" class="win" data-cmd="contact" data-win="5">contact</button>
-        <button type="button" class="win" data-cmd="help" data-win="6">help</button>
-      </span>
-    </div>
-  </nav>
+    <!-- ===================================================== -->
+    <!-- CINNAMON PANEL (taskbar)                              -->
+    <!-- ===================================================== -->
+    <nav id="cinnamon-panel" aria-label="Desktop taskbar">
+      <div class="panel-left">
+        <!-- App Menu button -->
+        <button type="button" id="appmenu-btn" aria-haspopup="true" aria-expanded="false" aria-controls="appmenu">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="1" y="2.5" width="14" height="2" rx="1"/>
+            <rect x="1" y="7" width="14" height="2" rx="1"/>
+            <rect x="1" y="11.5" width="14" height="2" rx="1"/>
+          </svg>
+          Menu
+        </button>
 
+        <!-- Taskbar window pills -->
+        <div class="panel-wins" id="panel-wins" role="tablist" aria-label="Open windows">
+          <button type="button" class="panel-win active" data-cmd="home" data-win="0" role="tab" aria-selected="true">Terminal</button>
+          <button type="button" class="panel-win" data-cmd="cat ~/about.md" data-win="1" role="tab" aria-selected="false">About</button>
+          <button type="button" class="panel-win" data-cmd="projects" data-win="2" role="tab" aria-selected="false">Projects</button>
+          <button type="button" class="panel-win" data-cmd="skills" data-win="3" role="tab" aria-selected="false">Skills</button>
+          <button type="button" class="panel-win" data-cmd="achievements" data-win="4" role="tab" aria-selected="false">Achievements</button>
+          <button type="button" class="panel-win" data-cmd="roadmap" data-win="5" role="tab" aria-selected="false">Roadmap</button>
+          <button type="button" class="panel-win" data-cmd="notes" data-win="6" role="tab" aria-selected="false">Notes</button>
+          <button type="button" class="panel-win" data-cmd="contact" data-win="7" role="tab" aria-selected="false">Contact</button>
+        </div>
+      </div>
+
+      <div class="panel-right">
+        <!-- Clock -->
+        <span class="panel-clock" id="panel-clock" aria-live="off" aria-atomic="true"></span>
+        <span class="panel-sep" aria-hidden="true"></span>
+        <!-- Theme toggle -->
+        <span class="panel-themes" role="group" aria-label="Colour theme">
+          <button type="button" class="th panel-btn" data-theme-pick="graphite" aria-pressed="true" title="Dark theme">dark</button>
+          <button type="button" class="th panel-btn" data-theme-pick="chalk" aria-pressed="false" title="Light theme">light</button>
+          <button type="button" class="th panel-btn" data-theme-pick="mint-y-teal" aria-pressed="false" title="Mint-Y Teal theme">mint</button>
+        </span>
+        <span class="panel-sep" aria-hidden="true"></span>
+        <!-- Plain view -->
+        <button type="button" id="btn-plain" class="panel-btn" title="Show a regular page instead of the terminal">plain</button>
+      </div>
+    </nav>
+
+    <!-- ===================================================== -->
+    <!-- APP MENU (popup)                                      -->
+    <!-- ===================================================== -->
+    <div id="appmenu" hidden role="dialog" aria-label="Application menu" aria-modal="false">
+      <div class="appmenu-header">
+        <div class="appmenu-title">Ashutosh Mishra</div>
+        <div class="appmenu-subtitle">guest@ashutosh · Linux Mint 22 Ashu Edition</div>
+        <input class="appmenu-search" id="appmenu-search" type="text" placeholder="Search apps &amp; commands…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="appmenu-section-label">Portfolio</div>
+      <div class="appmenu-items" id="appmenu-items">
+        <button class="appmenu-item" data-cmd="home">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span><div class="appmenu-item-label">Home</div><div class="appmenu-item-desc">Front page & quick links</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="cat ~/about.md">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span><div class="appmenu-item-label">About Me</div><div class="appmenu-item-desc">Who I am</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="projects">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span><div class="appmenu-item-label">Projects</div><div class="appmenu-item-desc">Things I've built</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="skills">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span><div class="appmenu-item-label">Skills</div><div class="appmenu-item-desc">Languages, frameworks, tools</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="experience">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          <span><div class="appmenu-item-label">Experience</div><div class="appmenu-item-desc">Internships & work</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="achievements">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          <span><div class="appmenu-item-label">Achievements</div><div class="appmenu-item-desc">Hackathons & awards</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="roadmap">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <span><div class="appmenu-item-label">Roadmap</div><div class="appmenu-item-desc">Learning timeline</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="notes">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span><div class="appmenu-item-label">Notes / Blog</div><div class="appmenu-item-desc">Writing & updates</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="stats">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span><div class="appmenu-item-label">Stats</div><div class="appmenu-item-desc">GitHub & portfolio numbers</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="contact">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span><div class="appmenu-item-label">Contact</div><div class="appmenu-item-desc">Email, GitHub, LinkedIn</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="resume">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span><div class="appmenu-item-label">Resume</div><div class="appmenu-item-desc">Open PDF résumé</div></span>
+        </button>
+        <button class="appmenu-item" data-cmd="hire">
+          <svg class="appmenu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span><div class="appmenu-item-label">Hire Me</div><div class="appmenu-item-desc">Open to opportunities</div></span>
+        </button>
+      </div>
+      <div class="appmenu-footer">
+        <button class="appmenu-footer-btn" data-cmd="neofetch">neofetch</button>
+        <button class="appmenu-footer-btn" data-cmd="help">help</button>
+        <button class="appmenu-footer-btn" id="appmenu-plain-btn">plain view</button>
+      </div>
+    </div><!-- /#appmenu -->
+
+  </div><!-- /#cinnamon-desktop -->
+
+  <!-- Plain view (overlays all, fullscreen) -->
   <div id="plain" class="plain" hidden role="dialog" aria-modal="true" aria-label="Regular page view of the portfolio"></div>
 
   <!-- Portfolio terminal scripts -->
   <script src="js/data.js"></script>
   <script src="js/shell.js"></script>
+  <script src="js/programs.js"></script>
   <script src="js/terminal.js"></script>
-  <script src="js/main.js" type="module"></script>
 
   <!-- ========================================================= -->
   <!-- OmniDimension AI Chat Widget                              -->

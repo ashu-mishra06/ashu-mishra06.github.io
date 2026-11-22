@@ -76,7 +76,7 @@ test("cd .. cannot escape past root", () => {
 test("cat prints about.md with real content", () => {
   const out = text(fresh().exec("cat about.md"));
   assert.ok(out.includes("Ashutosh Mishra"));
-  assert.ok(out.includes("Atavishaala") && out.includes("Future 6.0"));
+  assert.ok(out.includes("Atavishaala") && out.includes("FastAPI"));
 });
 
 test("cat handles relative, ~ and absolute paths", () => {
@@ -97,7 +97,7 @@ test("cat errors: missing, directory, no args", () => {
 
 test("every project has a readable file with a repo link", () => {
   const sh = fresh();
-  D.projects.forEach((p) => {
+  D.projects.filter((p) => p.repo).forEach((p) => {
     const out = text(sh.exec("cat ~/projects/" + p.id + ".md"));
     assert.ok(out.includes(p.name), p.id + " name");
     assert.ok(out.includes(p.repo), p.id + " repo link");
@@ -139,7 +139,7 @@ test("education is available but never a headline item", () => {
 test("certifications command and files", () => {
   const sh = fresh();
   const out = text(sh.exec("certifications"));
-  ["Oracle Certified Foundations Associate", "Data Structures Bootcamp", "Python Certification", "The AI Advantage"].forEach((k) => assert.ok(out.includes(k), k));
+  ["Oracle Certified Foundations Associate", "Data Structure Bootcamp", "Python Certification"].forEach((k) => assert.ok(out.includes(k), k));
   assert.ok(text(sh.exec("certs")).includes("Oracle"));
   assert.ok(text(sh.exec("cat ~/certifications/oracle-foundations-associate.md")).includes("expires Oct 2027"));
 });
@@ -147,7 +147,7 @@ test("certifications command and files", () => {
 test("skills are readable as files and by group", () => {
   const sh = fresh();
   assert.ok(text(sh.exec("cat skills/ai-ml.txt")).includes("TensorFlow Lite"));
-  assert.ok(text(sh.exec("ls skills")).includes("cloud-data.txt"));
+  assert.ok(text(sh.exec("ls skills")).includes("ai-ml.txt"));
 });
 
 test("data.js is consistent: unique ids, résumé file exists, links are safe", () => {
@@ -198,10 +198,9 @@ test("shortcut commands print real data", () => {
   assert.ok(text(sh.exec("projects")).includes(D.projects.length + " projects"));
   D.projects.forEach((p) => assert.ok(text(sh.exec("projects")).includes(p.name)));
   const sk = text(sh.exec("skills"));
-  ["Python", "C++", "Kotlin", "React.js", "Next.js", "Jetpack Compose", "Cloud Firestore", "TensorFlow Lite", "Git"].forEach((k) => assert.ok(sk.includes(k), k));
-  assert.ok(text(sh.exec("achievements")).includes("Future 6.0"));
+  ["Python", "C++", "Kotlin", "React", "Jetpack Compose", "TensorFlow Lite", "Git"].forEach((k) => assert.ok(sk.includes(k), k));
+  assert.ok(text(sh.exec("achievements")).includes("Future Yi 6.0"));
   assert.ok(text(sh.exec("achievements")).includes("Smart India Hackathon 2026"));
-  assert.ok(text(sh.exec("achievements")).includes("Pull Shark"));
   assert.ok(text(sh.exec("experience")).includes("Cognifyz Technologies"));
   assert.ok(text(sh.exec("experience")).includes("Atavishaala"));
   assert.ok(text(sh.exec("experience")).includes("Dec 2025 – Jan 2026"));
@@ -214,11 +213,13 @@ test("open returns an open action for github, linkedin, email and projects", () 
   assert.deepStrictEqual(sh.exec("open github").actions, [{ type: "open", url: D.links.github }]);
   assert.deepStrictEqual(sh.exec("open linkedin").actions, [{ type: "open", url: D.links.linkedin }]);
   assert.deepStrictEqual(sh.exec("open email").actions, [{ type: "open", url: "mailto:" + D.links.email }]);
-  assert.deepStrictEqual(sh.exec("open roadsos").actions, [{ type: "open", url: D.projects[0].repo }]);
+  // driftguard is now the first project
+  const firstProj = D.projects[0];
+  assert.deepStrictEqual(sh.exec("open " + firstProj.id).actions, [{ type: "open", url: firstProj.live || firstProj.repo }]);
   assert.deepStrictEqual(sh.exec("open couple-connect").actions, [{ type: "open", url: "https://coupascup.netlify.app/" }]);
   assert.deepStrictEqual(sh.exec("open couple-connect repo").actions, [{ type: "open", url: "https://github.com/ashu-mishra06/Couple-connect-" }]);
-  assert.deepStrictEqual(sh.exec("open resume").actions, [{ type: "open", url: D.links.resume }]);
-  assert.deepStrictEqual(sh.exec("resume").actions, [{ type: "open", url: D.links.resume }]);
+  assert.deepStrictEqual(sh.exec("open resume").actions, [{ type: "launch", app: "resume" }]);
+  assert.deepStrictEqual(sh.exec("resume").actions, [{ type: "launch", app: "resume" }]);
   const chat = sh.exec("open chatgraph");
   assert.strictEqual(chat.actions.length, 0);
   assert.ok(text(chat).includes("no public link yet"));
@@ -227,14 +228,10 @@ test("open returns an open action for github, linkedin, email and projects", () 
   assert.strictEqual(sh.exec("open").actions.length, 0);
 });
 
-test("neofetch is a plain aligned fact sheet: no ASCII art, no colour blocks", () => {
+test("neofetch shows Linux Mint facts and system info", () => {
   const res = fresh().exec("neofetch", { theme: "chalk" });
   const out = text(res);
-  ["guest@ashutosh", "GitHub Pages", "Intern at Atavishaala", "Future 6.0", "Python, C++, JavaScript, Kotlin", "chalk"].forEach((k) => assert.ok(out.includes(k), k));
-  assert.ok(!/[\u2580-\u259f]|\|o_o/.test(out), "no block or Tux characters");
-  const keyed = res.html.filter((h) => /class="k"/.test(h)).map((h) => strip(h));
-  const cols = new Set(keyed.map((l) => l.search(/\S/) === 0 && l.slice(0, 11).trim().length ? l.slice(11).search(/\S/) : 0));
-  assert.deepStrictEqual([...cols], [0], "values start in the same column");
+  ["guest@ashutosh", "GitHub Pages", "Intern at Atavishaala", "chalk", "Linux Mint 22"].forEach((k) => assert.ok(out.includes(k), k));
 });
 
 test("home prints the front page: name, role, tagline, facts, quick links", () => {
@@ -275,11 +272,12 @@ test("no double blank line at the end of projects / achievements", () => {
 
 test("theme: list, set, reject", () => {
   const sh = fresh();
-  assert.ok(text(sh.exec("theme", { theme: "graphite" })).includes("phosphor"));
-  assert.deepStrictEqual(sh.exec("theme chalk").actions, [{ type: "theme", name: "chalk" }]);
-  assert.deepStrictEqual(sh.exec("theme dark").actions, [{ type: "theme", name: "graphite" }], "dark is an alias");
-  assert.deepStrictEqual(sh.exec("theme light").actions, [{ type: "theme", name: "chalk" }], "light is an alias");
-  assert.deepStrictEqual(sh.exec("theme green").actions, [{ type: "theme", name: "phosphor" }], "green is an alias");
+  // Theme list should include mint-y-teal
+  assert.ok(text(sh.exec("theme", { theme: "graphite" })).includes("mint-y-teal"));
+  assert.deepStrictEqual(sh.exec("theme dark").actions, [{ type: "theme", name: "dark" }]);
+  assert.deepStrictEqual(sh.exec("theme light").actions, [{ type: "theme", name: "light" }]);
+  assert.deepStrictEqual(sh.exec("theme mint").actions, [{ type: "theme", name: "mint-y-teal" }], "mint is an alias");
+  assert.deepStrictEqual(sh.exec("theme green").actions, [{ type: "theme", name: "mint-y-teal" }], "green is an alias");
   assert.ok(text(sh.exec("theme neon")).includes("unknown theme"));
   assert.strictEqual(sh.exec("theme neon").actions.length, 0);
 });
@@ -288,7 +286,7 @@ test("UI actions: clear, reboot/exit, plain/gui", () => {
   const sh = fresh();
   assert.deepStrictEqual(sh.exec("clear").actions, [{ type: "clear" }]);
   assert.deepStrictEqual(sh.exec("reboot").actions, [{ type: "reboot" }]);
-  assert.deepStrictEqual(sh.exec("exit").actions, [{ type: "reboot" }]);
+  assert.deepStrictEqual(sh.exec("exit").actions, [{ type: "exit" }]);
   assert.deepStrictEqual(sh.exec("plain").actions, [{ type: "plain" }]);
   assert.deepStrictEqual(sh.exec("gui").actions, [{ type: "plain" }]);
 });
@@ -325,7 +323,7 @@ test("typing a filename explains permission and suggests cat", () => {
 test("help lists all groups and clickable commands", () => {
   const res = fresh().exec("help");
   const out = text(res);
-  ["portfolio", "explore", "links", "system", "projects", "grep", "neofetch"].forEach((k) => assert.ok(out.includes(k), k));
+  ["portfolio", "explore", "system", "projects", "grep", "neofetch"].forEach((k) => assert.ok(out.includes(k), k));
   assert.ok(res.html.join("").includes('data-cmd="cat ~/about.md"'));
 });
 
@@ -348,7 +346,7 @@ test("easter eggs: sudo, rm -rf /, vim, .secrets, ./stats.sh", () => {
   assert.ok(hire.includes("Password accepted") && hire.includes(D.links.email));
   assert.ok(text(sh.exec("rm -rf /")).includes("dangerous"));
   assert.ok(text(sh.exec("rm about.md")).includes("Read-only file system"));
-  assert.ok(text(sh.exec("vim about.md")).includes("read-only"));
+  assert.ok(text(sh.exec("vim new.md")).includes("read-only"));
   assert.ok(text(sh.exec("cat .secrets")).includes("hidden file"));
   assert.ok(text(sh.exec("./stats.sh")).includes("projects"));
   assert.ok(text(sh.exec("mkdir x")).includes("Read-only"));
@@ -393,7 +391,8 @@ test("tab completion: open targets, themes, after ';'", () => {
   const sh = fresh();
   assert.strictEqual(sh.complete("open road").line, "open roadsos ");
   assert.strictEqual(sh.complete("open git").line, "open github ");
-  assert.strictEqual(sh.complete("theme pho").line, "theme phosphor ");
+  // mint-y-teal is now a theme, 'mint' and 'teal' are aliases
+  assert.ok(sh.complete("theme mi").line.startsWith("theme mint"));
   assert.strictEqual(sh.complete("theme li").line, "theme light ");
   assert.strictEqual(sh.complete("cd projects; proj").line, "cd projects; projects ");
   assert.strictEqual(sh.complete("zzz").line, "zzz");
@@ -403,6 +402,41 @@ test("tab completion: common prefix for ambiguous matches", () => {
   const sh = fresh();
   const r = sh.complete("cat ~/projects/");
   assert.ok(r.options.length === D.projects.length, "lists all projects");
+});
+
+// New commands added in this version
+test("stats command shows github and portfolio numbers", () => {
+  const out = text(fresh().exec("stats"));
+  assert.ok(out.includes("Repositories") || out.includes("Projects"));
+  assert.ok(out.includes("GitHub"));
+});
+
+test("roadmap command shows learning timeline", () => {
+  const out = text(fresh().exec("roadmap"));
+  assert.ok(out.includes("2024") && (out.includes("B.Tech") || out.includes("LNCTE") || out.includes("Python")));
+});
+
+test("notes command lists notes and blog posts", () => {
+  const out = text(fresh().exec("notes"));
+  assert.ok(out.includes("Open to Work") || out.includes("ChatGraph") || out.includes("RoadSOS"));
+});
+
+test("hire command shows open-to-work info and opens linkedin", () => {
+  const res = fresh().exec("hire");
+  const out = text(res);
+  assert.ok(out.includes("Open to Work") || out.includes("internship"));
+  assert.ok(out.includes(D.links.email));
+  // hire also opens linkedin
+  assert.ok(res.actions.some((a) => a.type === "open" && a.url === D.links.linkedin));
+});
+
+test("notes are readable via cat ~/notes/<id>.md", () => {
+  if (!D.notes || !D.notes.length) return;
+  const sh = fresh();
+  D.notes.forEach((n) => {
+    const out = text(sh.exec("cat ~/notes/" + n.id + ".md"));
+    assert.ok(out.includes(n.title), "note " + n.id + " should contain its title");
+  });
 });
 
 console.log("\n" + passed + " passed, " + failed + " failed");

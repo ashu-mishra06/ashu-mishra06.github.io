@@ -11,29 +11,32 @@ It is 100% static HTML, CSS and JavaScript. No build step, no dependencies, no s
 
 ```
 home             about            projects         skills           achievements
-certifications   contact          resume           experience
+certifications   contact          resume           experience       roadmap
+notes            stats            hire             neofetch         plain
 ls -la           cd projects      cat roadsos.md   tree             grep kotlin
-open github      theme green      neofetch         plain            help
+open github      theme mint       help             cmatrix          btop
 ```
 
-Everything underlined is clickable, and the bar at the bottom works on phones.
-There are a few hidden extras too (`ls -a`, `sudo hire ashutosh`, ...).
+Everything underlined is clickable, the bottom Cinnamon panel works on both desktop and mobile,
+and the app menu (☰ Menu) provides quick access to all portfolio sections.
+There are a few hidden extras too (`ls -a`, `sudo hire ashutosh`, `cowsay`, `fortune | lolcat`, ...).
 
 ## Files
 
 ```
-index.html          the page
+index.html          the page with Linux Mint boot splash & Cinnamon desktop shell
 404.html            "no such file or directory" page for wrong URLs
 favicon.svg         browser tab icon
-Ashutosh_Mishra_Resume.pdf   your résumé; `resume` and `open resume` serve it
+Ashutosh_Mishra_Resume_2.pdf   your résumé; `resume` and `open resume` serve it
 robots.txt          tells search engines they may crawl the whole site
 sitemap.xml         the one page on this site, for Google/Bing to index
 <hex>.txt           IndexNow ownership key (see the SEO section below)
 .nojekyll           optional; tells GitHub Pages to serve the files exactly as they are
-css/style.css       layout, type and the three themes
-js/data.js          YOUR CONTENT: the only file you normally edit
+css/style.css       Cinnamon desktop, window manager, type and three themes (graphite, chalk, mint-y-teal)
+js/data.js          YOUR CONTENT: the primary file you edit
 js/shell.js         the virtual Linux shell (commands, filesystem, tab completion)
-js/terminal.js      the browser side (boot sequence, keyboard, themes, plain view)
+js/terminal.js      browser side (boot sequence, window manager, app menu, keyboard, themes, plain view)
+js/programs.js      interactive animated terminal programs (cmatrix, btop, sl, snake, etc.)
 tests/shell.test.js automated tests for the shell (node tests/shell.test.js)
 ```
 
